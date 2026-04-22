@@ -114,7 +114,7 @@ function Navbar({ onBook }) {
       }}
     >
       <div
-        className="orvex-container"
+        className="cos-container"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -124,10 +124,10 @@ function Navbar({ onBook }) {
       >
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <span style={{ fontWeight: 700, fontSize: 18, color: '#fff', letterSpacing: '-0.02em' }}>
-            ORVEX
+            COS
           </span>
           <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, letterSpacing: '0.08em', fontWeight: 500 }}>
-            SYSTEMS
+            STUDIOS
           </span>
         </div>
         <motion.button
@@ -157,7 +157,7 @@ function Section({ children, style, bg }) {
   return (
     <section
       ref={ref}
-      className="orvex-section"
+      className="cos-section"
       style={{
         padding: '100px 0',
         position: 'relative',
@@ -294,6 +294,21 @@ function Hero({ onBook, onServices }) {
       }}
     >
       <div style={{ textAlign: 'center', maxWidth: 900 }}>
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{
+            fontSize: 12,
+            letterSpacing: '0.2em',
+            color: 'rgba(255,255,255,0.35)',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            marginBottom: 24,
+          }}
+        >
+          More clients. Less chaos.
+        </motion.div>
         <motion.h1
           style={{
             fontSize: 'clamp(36px, 8vw, 80px)',
@@ -438,7 +453,7 @@ function ProblemCard({ icon: Icon, title, text, delay }) {
 function ProblemSection() {
   return (
     <Section bg={colors.bgAlt}>
-      <div className="orvex-container">
+      <div className="cos-container">
         <SectionLabel>The Problem</SectionLabel>
         <SectionHeadline max={720}>
           Most small businesses are invisible online — and losing clients because of it.
@@ -578,7 +593,7 @@ function ServiceCard({ badge, title, description, items, price, cta, onClick, de
 function ServicesSection({ onBook }) {
   return (
     <Section>
-      <div className="orvex-container">
+      <div className="cos-container">
         <SectionLabel>What We Build</SectionLabel>
         <SectionHeadline max={720}>Two products. One goal: grow your business.</SectionHeadline>
         <div
@@ -688,7 +703,7 @@ function ProcessStep({ number, title, text, delay }) {
 function ProcessSection() {
   return (
     <Section bg={colors.bgAlt}>
-      <div className="orvex-container">
+      <div className="cos-container">
         <SectionLabel>The Process</SectionLabel>
         <SectionHeadline max={720}>From first call to live system in under 30 days.</SectionHeadline>
         <div
@@ -747,7 +762,7 @@ function BenefitCard({ title, text, delay }) {
 function BenefitsSection() {
   return (
     <Section>
-      <div className="orvex-container">
+      <div className="cos-container">
         <SectionLabel>The Results</SectionLabel>
         <SectionHeadline max={720}>What changes when you work with us.</SectionHeadline>
         <div
@@ -894,7 +909,7 @@ function BookingForm() {
           We'll reach out within 24 hours to confirm your call.
         </p>
         <p style={{ color: colors.faint, marginTop: 14, fontSize: 13 }}>
-          Talk soon, Eugene @ Orvex Systems
+          Talk soon, Eugene @ COS Studios
         </p>
       </div>
     )
@@ -1036,7 +1051,7 @@ function BookingForm() {
 function BookingSection({ id }) {
   return (
     <Section bg={colors.bgAlt} style={{}}>
-      <div className="orvex-container" id={id}>
+      <div className="cos-container" id={id}>
         <SectionLabel>Get Started</SectionLabel>
         <SectionHeadline max={720}>Book your free 30-minute call.</SectionHeadline>
         <SectionSub max={620}>
@@ -1060,7 +1075,7 @@ function Footer({ onBook }) {
       }}
     >
       <div
-        className="orvex-container"
+        className="cos-container"
         style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -1071,13 +1086,13 @@ function Footer({ onBook }) {
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontWeight: 700, fontSize: 18 }}>ORVEX</span>
+            <span style={{ fontWeight: 700, fontSize: 18 }}>COS</span>
             <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, letterSpacing: '0.08em' }}>
-              SYSTEMS
+              STUDIOS
             </span>
           </div>
           <p style={{ color: colors.muted, fontSize: 13, marginTop: 8, maxWidth: 360 }}>
-            Building websites and systems for small businesses.
+            More clients. Less chaos.
           </p>
         </div>
         <motion.button
@@ -1097,7 +1112,7 @@ function Footer({ onBook }) {
         </motion.button>
       </div>
       <div
-        className="orvex-container"
+        className="cos-container"
         style={{
           color: 'rgba(255,255,255,0.3)',
           fontSize: 12,
@@ -1106,7 +1121,7 @@ function Footer({ onBook }) {
           borderTop: `0.5px solid ${colors.border}`,
         }}
       >
-        © 2026 Orvex Systems. Aruba &amp; Caribbean.
+        © 2026 COS Studios. Aruba &amp; Caribbean.
       </div>
     </footer>
   )

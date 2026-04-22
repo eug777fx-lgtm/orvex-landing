@@ -100,14 +100,14 @@ textarea {
   50% { transform: translateY(6px); opacity: 0.9; }
 }
 
-.orvex-container {
+.cos-container {
   max-width: 1120px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
 @media (max-width: 768px) {
-  .orvex-section {
+  .cos-section {
     padding: 60px 0 !important;
   }
 }
