@@ -1,5 +1,14 @@
-import { useRef, useState } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
+} from 'framer-motion'
+import Lenis from '@studio-freight/lenis'
 import {
   Globe,
   AlertCircle,
@@ -7,6 +16,10 @@ import {
   Check,
   ArrowRight,
   ChevronDown,
+  MessageCircle,
+  Plus,
+  Minus,
+  Quote,
 } from 'lucide-react'
 
 const colors = {
@@ -28,6 +41,11 @@ const glassCard = {
   backdropFilter: 'blur(12px) saturate(160%)',
   WebkitBackdropFilter: 'blur(12px) saturate(160%)',
 }
+
+const EASE = [0.16, 1, 0.3, 1]
+const WHATSAPP_NUMBER = '+2971234567'
+
+/* ---------------- Background ---------------- */
 
 function Background() {
   return (
@@ -95,18 +113,119 @@ function Background() {
   )
 }
 
+/* ---------------- Custom Cursor ---------------- */
+
+function CustomCursor() {
+  const [supportsHover, setSupportsHover] = useState(false)
+  const [hovering, setHovering] = useState(false)
+  const x = useMotionValue(-100)
+  const y = useMotionValue(-100)
+  const springX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.3 })
+  const springY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.3 })
+
+  useEffect(() => {
+    const media = window.matchMedia('(hover: hover) and (pointer: fine)')
+    const update = () => setSupportsHover(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    if (!supportsHover) return
+    document.documentElement.classList.add('cos-cursor-none')
+
+    function onMove(e) {
+      x.set(e.clientX)
+      y.set(e.clientY)
+    }
+    function onOver(e) {
+      const el = e.target
+      if (!(el instanceof Element)) return
+      if (el.closest('button, a, label, [role="button"], input, select, textarea')) {
+        setHovering(true)
+      } else {
+        setHovering(false)
+      }
+    }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseover', onOver)
+    return () => {
+      document.documentElement.classList.remove('cos-cursor-none')
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseover', onOver)
+    }
+  }, [supportsHover, x, y])
+
+  if (!supportsHover) return null
+
+  return (
+    <>
+      <motion.div
+        className="cos-custom-cursor"
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          x,
+          y,
+          translateX: '-50%',
+          translateY: '-50%',
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          background: '#ffffff',
+          pointerEvents: 'none',
+          zIndex: 10000,
+          mixBlendMode: 'difference',
+        }}
+      />
+      <motion.div
+        className="cos-custom-cursor"
+        animate={{
+          width: hovering ? 48 : 32,
+          height: hovering ? 48 : 32,
+          background: hovering ? 'transparent' : 'rgba(255,255,255,0.08)',
+          borderColor: hovering ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.12)',
+        }}
+        transition={{ duration: 0.2, ease: EASE }}
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          x: springX,
+          y: springY,
+          translateX: '-50%',
+          translateY: '-50%',
+          borderRadius: '50%',
+          border: '1px solid rgba(255,255,255,0.12)',
+          pointerEvents: 'none',
+          zIndex: 9999,
+          backdropFilter: 'blur(2px)',
+        }}
+      />
+    </>
+  )
+}
+
+/* ---------------- Navbar ---------------- */
+
 function Navbar({ onBook }) {
   return (
-    <header
+    <motion.header
+      initial={{ y: -60, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: EASE }}
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         height: 60,
-        background: 'rgba(8,8,8,0.8)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        background: 'rgba(8,8,8,0.75)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
         borderBottom: `0.5px solid rgba(255,255,255,0.06)`,
         zIndex: 100,
         display: 'flex',
@@ -131,7 +250,7 @@ function Navbar({ onBook }) {
           </span>
         </div>
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={onBook}
           style={{
@@ -147,16 +266,34 @@ function Navbar({ onBook }) {
           Book a Call
         </motion.button>
       </div>
-    </header>
+    </motion.header>
+  )
+}
+
+/* ---------------- AnimatedSection wrapper ---------------- */
+
+function AnimatedSection({ children, amount = 0.15 }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, amount })
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+      animate={
+        inView
+          ? { opacity: 1, y: 0, filter: 'blur(0px)' }
+          : { opacity: 0, y: 40, filter: 'blur(8px)' }
+      }
+      transition={{ duration: 0.8, ease: EASE }}
+    >
+      {children}
+    </motion.div>
   )
 }
 
 function Section({ children, style, bg }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount: 0.15 })
   return (
     <section
-      ref={ref}
       className="cos-section"
       style={{
         padding: '100px 0',
@@ -166,16 +303,12 @@ function Section({ children, style, bg }) {
         ...style,
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {children}
-      </motion.div>
+      <AnimatedSection>{children}</AnimatedSection>
     </section>
   )
 }
+
+/* ---------------- Shared pieces ---------------- */
 
 function SectionLabel({ children }) {
   return (
@@ -270,7 +403,209 @@ const smallGhostBtn = {
   gap: 6,
 }
 
+/* ---------------- Dashboard Mockup ---------------- */
+
+function DashboardMockup({ scrollY }) {
+  const rotateX = useTransform(scrollY, [0, 400], [8, 0])
+  const scale = useTransform(scrollY, [0, 400], [1, 0.98])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.9, delay: 1.4, ease: EASE }}
+      style={{
+        position: 'relative',
+        maxWidth: 900,
+        width: '100%',
+        margin: '70px auto 0',
+        perspective: 1200,
+      }}
+    >
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          borderRadius: 20,
+          background: 'rgba(255,255,255,0.04)',
+          border: '0.5px solid rgba(255,255,255,0.12)',
+          boxShadow:
+            '0 40px 80px rgba(99,102,241,0.18), 0 0 0 0.5px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(20px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+          overflow: 'hidden',
+          transformStyle: 'preserve-3d',
+          rotateX,
+          scale,
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '160px 1fr',
+            minHeight: 380,
+          }}
+        >
+          <div
+            style={{
+              borderRight: '0.5px solid rgba(255,255,255,0.06)',
+              padding: '20px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 14,
+                paddingLeft: 4,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em',
+                  color: '#fff',
+                }}
+              >
+                COS
+              </span>
+              <span
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  background: '#6378ff',
+                  boxShadow: '0 0 8px rgba(99,120,255,0.6)',
+                }}
+              />
+            </div>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  background: i === 0 ? 'rgba(255,255,255,0.06)' : 'transparent',
+                }}
+              >
+                <span
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: 4,
+                    background: 'rgba(255,255,255,0.12)',
+                  }}
+                />
+                <span
+                  style={{
+                    height: 8,
+                    flex: 1,
+                    borderRadius: 4,
+                    background: i === 0 ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.08)',
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: 22 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: 12,
+                marginBottom: 20,
+              }}
+            >
+              {[
+                { label: 'LEADS', value: '24' },
+                { label: 'PIPELINE', value: '$4,200' },
+                { label: 'TASKS', value: '8' },
+                { label: 'WIN RATE', value: '67%' },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  style={{
+                    background: 'rgba(17,17,20,0.6)',
+                    border: '0.5px solid rgba(255,255,255,0.08)',
+                    borderRadius: 10,
+                    padding: '12px 14px',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 9,
+                      letterSpacing: '0.08em',
+                      color: 'rgba(255,255,255,0.4)',
+                      textTransform: 'uppercase',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {stat.label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: '#fff',
+                      letterSpacing: '-0.02em',
+                      marginTop: 6,
+                    }}
+                  >
+                    {stat.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                background: 'rgba(17,17,20,0.6)',
+                border: '0.5px solid rgba(255,255,255,0.08)',
+                borderRadius: 12,
+                padding: 20,
+                height: 200,
+                display: 'flex',
+                alignItems: 'flex-end',
+                gap: 10,
+              }}
+            >
+              {[55, 72, 48, 80, 64, 92, 70, 58, 84, 72, 96, 68].map((h, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ height: 0 }}
+                  animate={{ height: `${h}%` }}
+                  transition={{
+                    duration: 0.8,
+                    delay: 1.8 + i * 0.05,
+                    ease: EASE,
+                  }}
+                  style={{
+                    flex: 1,
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.15) 100%)',
+                    borderRadius: 3,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+/* ---------------- Hero ---------------- */
+
 function Hero({ onBook, onServices }) {
+  const { scrollY } = useScroll()
   const words = [
     'Your',
     'Business',
@@ -291,25 +626,36 @@ function Hero({ onBook, onServices }) {
         position: 'relative',
         zIndex: 1,
         padding: '120px 24px 80px',
+        overflow: 'hidden',
       }}
     >
-      <div style={{ textAlign: 'center', maxWidth: 900 }}>
+      <div
+        aria-hidden="true"
+        className="cos-grid-bg"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+      <div style={{ textAlign: 'center', maxWidth: 960, position: 'relative', zIndex: 1, width: '100%' }}>
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: EASE }}
           style={{
             fontSize: 12,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.35)',
+            color: 'rgba(255,255,255,0.4)',
             fontWeight: 600,
             textTransform: 'uppercase',
-            marginBottom: 24,
+            marginBottom: 26,
           }}
         >
           More clients. Less chaos.
         </motion.div>
-        <motion.h1
+        <h1
           style={{
             fontSize: 'clamp(36px, 8vw, 80px)',
             fontWeight: 700,
@@ -321,23 +667,23 @@ function Hero({ onBook, onServices }) {
           {words.map((w, i) => (
             <motion.span
               key={i}
-              initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              initial={{ opacity: 0, filter: 'blur(12px)', y: 20 }}
+              animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
               transition={{
-                duration: 0.6,
-                delay: 0.15 + i * 0.06,
-                ease: [0.16, 1, 0.3, 1],
+                duration: 0.7,
+                delay: 0.3 + i * 0.08,
+                ease: EASE,
               }}
               style={{ display: 'inline-block', marginRight: '0.28em' }}
             >
               {w}
             </motion.span>
           ))}
-        </motion.h1>
+        </h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ delay: 0.85, duration: 0.6, ease: EASE }}
           style={{
             color: colors.muted,
             fontSize: 'clamp(16px, 2.2vw, 20px)',
@@ -351,7 +697,7 @@ function Hero({ onBook, onServices }) {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.6 }}
+          transition={{ delay: 1, duration: 0.6, ease: EASE }}
           style={{
             display: 'flex',
             gap: 12,
@@ -361,7 +707,7 @@ function Hero({ onBook, onServices }) {
           }}
         >
           <motion.button
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={onBook}
             style={primaryBtn}
@@ -370,7 +716,7 @@ function Hero({ onBook, onServices }) {
             <ArrowRight size={17} />
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={onServices}
             style={ghostBtn}
@@ -381,7 +727,7 @@ function Hero({ onBook, onServices }) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.3, duration: 0.6 }}
+          transition={{ delay: 1.2, duration: 0.6 }}
           style={{
             display: 'flex',
             gap: 20,
@@ -396,15 +742,17 @@ function Hero({ onBook, onServices }) {
           <span>✓ Delivered in 2 weeks</span>
           <span>✓ Built for your business</span>
         </motion.div>
+        <DashboardMockup scrollY={scrollY} />
       </div>
       <div
         style={{
           position: 'absolute',
-          bottom: 36,
+          bottom: 24,
           left: '50%',
           transform: 'translateX(-50%)',
           color: 'rgba(255,255,255,0.35)',
           animation: 'arrowBounce 2s ease-in-out infinite',
+          zIndex: 2,
         }}
       >
         <ChevronDown size={20} />
@@ -413,19 +761,78 @@ function Hero({ onBook, onServices }) {
   )
 }
 
-function ProblemCard({ icon: Icon, title, text, delay }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount: 0.3 })
+/* ---------------- Marquee ---------------- */
+
+function Marquee() {
+  const items = [
+    'Plumbers',
+    'Electricians',
+    'Restaurants',
+    'Salons',
+    'HVAC',
+    'Pest Control',
+    'Cleaning',
+    'Barbershops',
+    'Gyms',
+    'Food Trucks',
+    'Landscaping',
+    'Clothing Stores',
+  ]
+  const line = items.join(' · ') + ' · '
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: 44,
+        background: 'rgba(255,255,255,0.03)',
+        borderTop: '0.5px solid rgba(255,255,255,0.06)',
+        borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        position: 'relative',
+        zIndex: 1,
+      }}
+    >
+      <div className="cos-marquee-track">
+        {[0, 1].map((k) => (
+          <span
+            key={k}
+            style={{
+              display: 'inline-block',
+              padding: '0 24px',
+              fontSize: 13,
+              color: 'rgba(255,255,255,0.4)',
+              letterSpacing: '0.05em',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {line}
+            {line}
+            {line}
+            {line}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ---------------- Problem ---------------- */
+
+function ProblemCard({ icon: Icon, title, text, index }) {
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ borderColor: colors.borderBright, scale: 1.01 }}
+      initial={{ opacity: 0, y: 60, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, amount: 0.3 }}
+      whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.2)' }}
+      transition={{ duration: 0.6, delay: index * 0.15, ease: EASE }}
       style={glassCard}
     >
-      <div
+      <motion.div
+        whileHover={{ rotate: 5, scale: 1.1 }}
+        transition={{ duration: 0.3, ease: EASE }}
         style={{
           width: 42,
           height: 42,
@@ -439,7 +846,7 @@ function ProblemCard({ icon: Icon, title, text, delay }) {
         }}
       >
         <Icon size={18} color="#fff" strokeWidth={1.8} />
-      </div>
+      </motion.div>
       <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>
         {title}
       </h3>
@@ -470,22 +877,22 @@ function ProblemSection() {
           }}
         >
           <ProblemCard
+            index={0}
             icon={Globe}
             title="No Website"
             text="Customers can't find you online. Your competitors are getting the jobs you should be getting."
-            delay={0}
           />
           <ProblemCard
+            index={1}
             icon={AlertCircle}
             title="No System"
             text="Tracking customers in your head or on paper means lost follow-ups, forgotten jobs, and missed revenue."
-            delay={0.1}
           />
           <ProblemCard
+            index={2}
             icon={TrendingDown}
             title="No Growth"
             text="Without the right tools, you're stuck doing everything manually instead of focusing on what matters."
-            delay={0.2}
           />
         </div>
       </div>
@@ -493,16 +900,130 @@ function ProblemSection() {
   )
 }
 
+/* ---------------- Stats Bar ---------------- */
+
+function StatNumber({ target, prefix = '', suffix = '', isNumeric = true }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, amount: 0.5 })
+  const [value, setValue] = useState(isNumeric ? 0 : target)
+
+  useEffect(() => {
+    if (!isNumeric || !inView) return
+    const duration = 1500
+    const start = performance.now()
+    let raf
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setValue(Math.floor(eased * Number(target)))
+      if (t < 1) raf = requestAnimationFrame(step)
+      else setValue(Number(target))
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [inView, target, isNumeric])
+
+  return (
+    <span ref={ref}>
+      {prefix}
+      {value}
+      {suffix}
+    </span>
+  )
+}
+
+function StatsBar() {
+  const stats = [
+    { value: <><StatNumber target={2} /> Week</>, label: 'Average Delivery' },
+    { value: <><StatNumber target={100} suffix="%" /></>, label: 'Custom Built' },
+    { value: 'Caribbean', label: 'Based & Serving' },
+    { value: '$0', label: 'Hidden Fees' },
+  ]
+  return (
+    <section
+      className="cos-section"
+      style={{ padding: '40px 0', position: 'relative', zIndex: 1 }}
+    >
+      <div className="cos-container">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.7, ease: EASE }}
+          style={{
+            ...glassCard,
+            padding: '28px 24px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 0,
+          }}
+        >
+          {stats.map((s, i) => (
+            <div
+              key={i}
+              style={{
+                padding: '0 20px',
+                borderLeft: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                textAlign: 'center',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 'clamp(22px, 3vw, 30px)',
+                  fontWeight: 700,
+                  color: '#fff',
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.1,
+                }}
+              >
+                {s.value}
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.45)',
+                  marginTop: 6,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                }}
+              >
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------------- Services ---------------- */
+
 function ServiceCard({ badge, title, description, items, price, cta, onClick, delay }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, amount: 0.2 })
+
+  function onMove(e) {
+    const el = e.currentTarget
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    el.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.06), rgba(17,17,20,0.8) 60%)`
+  }
+  function onLeave(e) {
+    e.currentTarget.style.background = 'rgba(17,17,20,0.8)'
+  }
+
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ borderColor: colors.borderBright }}
+      transition={{ duration: 0.6, delay, ease: EASE }}
+      whileHover={{ rotateY: 2, rotateX: -1, scale: 1.01 }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
       style={{
         ...glassCard,
         padding: '2.5rem',
@@ -510,6 +1031,9 @@ function ServiceCard({ badge, title, description, items, price, cta, onClick, de
         flexDirection: 'column',
         gap: 18,
         position: 'relative',
+        transformPerspective: 1000,
+        transformStyle: 'preserve-3d',
+        transition: 'background 0.3s ease, border-color 0.2s ease',
       }}
     >
       {badge && (
@@ -579,7 +1103,7 @@ function ServiceCard({ badge, title, description, items, price, cta, onClick, de
         {price}
       </div>
       <motion.button
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         onClick={onClick}
         style={{ ...smallGhostBtn, alignSelf: 'flex-start', padding: '12px 24px', fontSize: 14 }}
@@ -658,32 +1182,33 @@ function ServicesSection({ onBook }) {
   )
 }
 
+/* ---------------- Process ---------------- */
+
 function ProcessStep({ number, title, text, delay }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount: 0.3 })
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
-      style={{
-        ...glassCard,
-        padding: '2rem',
-        position: 'relative',
-      }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      transition={{ duration: 0.5, delay, ease: EASE }}
+      style={{ ...glassCard, padding: '2rem', position: 'relative' }}
     >
-      <div
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        whileInView={{ scale: 1, opacity: 1 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: delay + 0.1 }}
         style={{
           fontSize: 42,
           fontWeight: 800,
           color: 'rgba(255,255,255,0.12)',
           letterSpacing: '-0.04em',
           lineHeight: 1,
+          display: 'inline-block',
         }}
       >
         {number}
-      </div>
+      </motion.div>
       <h3
         style={{
           fontSize: 18,
@@ -695,7 +1220,9 @@ function ProcessStep({ number, title, text, delay }) {
       >
         {title}
       </h3>
-      <p style={{ color: colors.muted, fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>{text}</p>
+      <p style={{ color: colors.muted, fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
+        {text}
+      </p>
     </motion.div>
   )
 }
@@ -725,30 +1252,43 @@ function ProcessSection() {
             number="02"
             title="We Build It"
             text="We design and build your website or system — customized for your business, no templates."
-            delay={0.1}
+            delay={0.2}
           />
           <ProcessStep
             number="03"
             title="You Grow"
             text="Your new website or system goes live. You start getting more clients and running more efficiently."
-            delay={0.2}
+            delay={0.4}
           />
         </div>
+        <motion.div
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: EASE }}
+          style={{
+            transformOrigin: 'left',
+            height: 1,
+            background:
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.2) 20%, rgba(255,255,255,0.2) 80%, transparent)',
+            marginTop: 40,
+          }}
+        />
       </div>
     </Section>
   )
 }
 
+/* ---------------- Benefits ---------------- */
+
 function BenefitCard({ title, text, delay }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount: 0.3 })
   return (
     <motion.div
-      ref={ref}
       initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ borderColor: colors.borderBright }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      whileHover={{ borderColor: colors.borderBright, y: -4 }}
+      transition={{ duration: 0.5, delay, ease: EASE }}
       style={{ ...glassCard, padding: '1.75rem' }}
     >
       <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>
@@ -773,31 +1313,232 @@ function BenefitsSection() {
             marginTop: 48,
           }}
         >
-          <BenefitCard
-            title="More Clients"
-            text="Your website works 24/7 bringing in new customers even while you sleep."
-            delay={0}
-          />
-          <BenefitCard
-            title="Save Time"
-            text="Stop managing everything in your head. Your system tracks it all automatically."
-            delay={0.08}
-          />
-          <BenefitCard
-            title="Look Professional"
-            text="A modern website builds trust instantly. Customers choose you over competitors."
-            delay={0.16}
-          />
-          <BenefitCard
-            title="Stay Organized"
-            text="Never lose a customer or forget a follow-up again. Everything is in one place."
-            delay={0.24}
-          />
+          <BenefitCard title="More Clients" text="Your website works 24/7 bringing in new customers even while you sleep." delay={0} />
+          <BenefitCard title="Save Time" text="Stop managing everything in your head. Your system tracks it all automatically." delay={0.08} />
+          <BenefitCard title="Look Professional" text="A modern website builds trust instantly. Customers choose you over competitors." delay={0.16} />
+          <BenefitCard title="Stay Organized" text="Never lose a customer or forget a follow-up again. Everything is in one place." delay={0.24} />
         </div>
       </div>
     </Section>
   )
 }
+
+/* ---------------- Testimonials ---------------- */
+
+const testimonials = [
+  {
+    quote:
+      'They built our website in 10 days. We started getting calls from new customers within the first week.',
+    name: 'Carlos M.',
+    business: 'Plumber, Oranjestad',
+  },
+  {
+    quote:
+      'The system they built replaced our notebooks completely. Now I can see all my jobs and customers in one place.',
+    name: 'Maria R.',
+    business: 'Cleaning Service, Noord',
+  },
+  {
+    quote:
+      'Professional, fast, and they actually understood what our business needed. Best investment we made.',
+    name: 'Ricardo F.',
+    business: 'Electrician, San Nicolas',
+  },
+]
+
+function TestimonialCard({ t, index }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.3 }}
+      whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.18)' }}
+      transition={{ duration: 0.6, delay: index * 0.12, ease: EASE }}
+      style={{ ...glassCard, padding: '2rem', position: 'relative', overflow: 'hidden' }}
+    >
+      <Quote
+        size={72}
+        strokeWidth={1}
+        style={{
+          position: 'absolute',
+          top: -14,
+          right: -10,
+          color: 'rgba(255,255,255,0.05)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, letterSpacing: '0.14em' }}>
+        ★★★★★
+      </div>
+      <p
+        style={{
+          color: '#fff',
+          fontSize: 15,
+          lineHeight: 1.65,
+          marginTop: 14,
+          position: 'relative',
+        }}
+      >
+        "{t.quote}"
+      </p>
+      <div style={{ marginTop: 20, borderTop: `0.5px solid ${colors.border}`, paddingTop: 14 }}>
+        <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{t.name}</div>
+        <div style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>{t.business}</div>
+      </div>
+    </motion.div>
+  )
+}
+
+function TestimonialsSection() {
+  return (
+    <Section bg={colors.bgAlt}>
+      <div className="cos-container">
+        <SectionLabel>What Clients Say</SectionLabel>
+        <SectionHeadline max={720}>
+          Real businesses. Real results.
+        </SectionHeadline>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 16,
+            marginTop: 48,
+          }}
+        >
+          {testimonials.map((t, i) => (
+            <TestimonialCard key={i} t={t} index={i} />
+          ))}
+        </div>
+      </div>
+    </Section>
+  )
+}
+
+/* ---------------- FAQ ---------------- */
+
+const faqs = [
+  {
+    q: 'How long does it take to build my website?',
+    a: 'Most websites are delivered in 10–14 days. CRM systems take 2–3 weeks depending on complexity.',
+  },
+  {
+    q: 'Do I need to be tech-savvy to use the system?',
+    a: 'Not at all. We build everything to be simple and train you how to use it. If you can use WhatsApp, you can use our systems.',
+  },
+  {
+    q: "What if I need changes after it's built?",
+    a: 'Every project includes a revision round. After that, we offer affordable monthly maintenance packages.',
+  },
+  {
+    q: 'Do you only work with businesses in Aruba?',
+    a: "We're based in Aruba but work with businesses across the Caribbean.",
+  },
+  {
+    q: 'How much does it cost?',
+    a: 'Websites start at $500. CRM systems start at $1,000. We also offer bundle pricing if you need both.',
+  },
+]
+
+function FAQItem({ q, a, isOpen, onToggle }) {
+  return (
+    <motion.div
+      layout
+      transition={{ layout: { duration: 0.4, ease: EASE } }}
+      style={{
+        ...glassCard,
+        padding: 0,
+        overflow: 'hidden',
+      }}
+    >
+      <motion.button
+        layout="position"
+        type="button"
+        onClick={onToggle}
+        style={{
+          width: '100%',
+          padding: '20px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          background: 'transparent',
+          textAlign: 'left',
+          cursor: 'pointer',
+        }}
+      >
+        <span style={{ color: '#fff', fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' }}>
+          {q}
+        </span>
+        <motion.span
+          animate={{ rotate: isOpen ? 45 : 0 }}
+          transition={{ duration: 0.25, ease: EASE }}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.06)',
+            border: '0.5px solid rgba(255,255,255,0.08)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Plus size={14} color="#fff" />
+        </motion.span>
+      </motion.button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            key="body"
+            layout
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div
+              style={{
+                padding: '0 24px 22px',
+                color: colors.muted,
+                fontSize: 14,
+                lineHeight: 1.65,
+              }}
+            >
+              {a}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
+
+function FAQSection() {
+  const [openIdx, setOpenIdx] = useState(0)
+  return (
+    <Section>
+      <div className="cos-container" style={{ maxWidth: 760 }}>
+        <SectionLabel>Questions</SectionLabel>
+        <SectionHeadline max={720}>Everything you might be wondering.</SectionHeadline>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 40 }}>
+          {faqs.map((f, i) => (
+            <FAQItem
+              key={i}
+              q={f.q}
+              a={f.a}
+              isOpen={openIdx === i}
+              onToggle={() => setOpenIdx(openIdx === i ? -1 : i)}
+            />
+          ))}
+        </div>
+      </div>
+    </Section>
+  )
+}
+
+/* ---------------- Booking Form ---------------- */
 
 const inputStyle = {
   width: '100%',
@@ -840,7 +1581,7 @@ function BookingForm() {
     service_needed: 'Website',
     message: '',
   })
-  const [state, setState] = useState('idle') // idle | submitting | success | error
+  const [state, setState] = useState('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
   function update(key, value) {
@@ -860,10 +1601,7 @@ function BookingForm() {
       const res = await fetch('/api/booking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          created_at: new Date().toISOString(),
-        }),
+        body: JSON.stringify({ ...form, created_at: new Date().toISOString() }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -882,8 +1620,6 @@ function BookingForm() {
       <div
         style={{
           ...glassCard,
-          maxWidth: 600,
-          margin: '48px auto 0',
           padding: '3rem 2rem',
           textAlign: 'center',
         }}
@@ -920,8 +1656,6 @@ function BookingForm() {
       onSubmit={handleSubmit}
       style={{
         ...glassCard,
-        maxWidth: 600,
-        margin: '48px auto 0',
         padding: '2.25rem',
         display: 'flex',
         flexDirection: 'column',
@@ -1035,7 +1769,7 @@ function BookingForm() {
         >
           {errorMsg || 'Something went wrong.'}{' '}
           <a
-            href="https://wa.me/2971234567"
+            href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}`}
             target="_blank"
             rel="noreferrer"
             style={{ color: '#fff', textDecoration: 'underline' }}
@@ -1048,20 +1782,151 @@ function BookingForm() {
   )
 }
 
-function BookingSection({ id }) {
+function BookingSection() {
   return (
-    <Section bg={colors.bgAlt} style={{}}>
-      <div className="cos-container" id={id}>
+    <Section bg={colors.bgAlt}>
+      <div className="cos-container">
         <SectionLabel>Get Started</SectionLabel>
         <SectionHeadline max={720}>Book your free 30-minute call.</SectionHeadline>
         <SectionSub max={620}>
           Tell us about your business and we'll show you exactly what we'd build for you — no commitment required.
         </SectionSub>
-        <BookingForm />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 28,
+            marginTop: 48,
+            alignItems: 'start',
+          }}
+        >
+          <div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {[
+                'We analyze your current situation',
+                "We show you exactly what we'd build",
+                'You get a custom quote — no pressure',
+              ].map((item, i) => (
+                <li key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.08)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      marginTop: 1,
+                    }}
+                  >
+                    <Check size={12} color="#fff" strokeWidth={3} />
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15 }}>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <div
+              style={{
+                marginTop: 28,
+                color: colors.muted,
+                fontSize: 13,
+              }}
+            >
+              We respond within 24 hours.
+            </div>
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                marginTop: 14,
+                color: '#fff',
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: 'underline',
+                textUnderlineOffset: 3,
+              }}
+            >
+              Prefer WhatsApp? Message us directly →
+            </a>
+          </div>
+          <BookingForm />
+        </div>
       </div>
     </Section>
   )
 }
+
+/* ---------------- WhatsApp FAB ---------------- */
+
+function WhatsAppFab() {
+  const [tooltip, setTooltip] = useState(false)
+  return (
+    <motion.a
+      href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}`}
+      target="_blank"
+      rel="noreferrer"
+      initial={{ x: 100, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ delay: 2, duration: 0.6, ease: EASE }}
+      whileHover={{ scale: 1.06 }}
+      whileTap={{ scale: 0.94 }}
+      onMouseEnter={() => setTooltip(true)}
+      onMouseLeave={() => setTooltip(false)}
+      style={{
+        position: 'fixed',
+        bottom: 24,
+        right: 24,
+        width: 56,
+        height: 56,
+        borderRadius: '50%',
+        background: '#25D366',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#fff',
+        zIndex: 200,
+        animation: 'whatsappPulse 2.4s ease-out infinite',
+      }}
+      aria-label="Chat on WhatsApp"
+    >
+      <MessageCircle size={24} strokeWidth={2} />
+      <AnimatePresence>
+        {tooltip && (
+          <motion.span
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 8 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: 'absolute',
+              right: 68,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: '#111',
+              border: '0.5px solid rgba(255,255,255,0.1)',
+              color: '#fff',
+              padding: '6px 12px',
+              borderRadius: 8,
+              fontSize: 12,
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+            }}
+          >
+            Chat on WhatsApp
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.a>
+  )
+}
+
+/* ---------------- Footer ---------------- */
 
 function Footer({ onBook }) {
   return (
@@ -1096,7 +1961,7 @@ function Footer({ onBook }) {
           </p>
         </div>
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={onBook}
           style={{
@@ -1127,9 +1992,29 @@ function Footer({ onBook }) {
   )
 }
 
+/* ---------------- App ---------------- */
+
 export default function App() {
   const bookingRef = useRef(null)
   const servicesRef = useRef(null)
+
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    })
+    let rafId
+    function raf(time) {
+      lenis.raf(time)
+      rafId = requestAnimationFrame(raf)
+    }
+    rafId = requestAnimationFrame(raf)
+    return () => {
+      cancelAnimationFrame(rafId)
+      lenis.destroy()
+    }
+  }, [])
 
   function scrollToBooking() {
     bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1140,19 +2025,25 @@ export default function App() {
 
   return (
     <>
+      <CustomCursor />
       <Background />
       <Navbar onBook={scrollToBooking} />
       <Hero onBook={scrollToBooking} onServices={scrollToServices} />
+      <Marquee />
       <ProblemSection />
+      <StatsBar />
       <div ref={servicesRef}>
         <ServicesSection onBook={scrollToBooking} />
       </div>
       <ProcessSection />
       <BenefitsSection />
+      <TestimonialsSection />
+      <FAQSection />
       <div ref={bookingRef}>
         <BookingSection />
       </div>
       <Footer onBook={scrollToBooking} />
+      <WhatsAppFab />
     </>
   )
 }
