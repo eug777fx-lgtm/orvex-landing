@@ -53,6 +53,60 @@ function Reveal({ children, delay = 0, y = 30, style }) {
 }
 
 /* ============================================================
+   PRESS BUTTON — hover + tap spring feedback
+   ============================================================ */
+function PressButton({ children, style, ...rest }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+      style={style}
+      {...rest}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+/* ============================================================
+   COUNT UP — animates a number into view
+   ============================================================ */
+function CountUp({ value }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-40px' })
+  const match = String(value).match(/^(\d+)(.*)$/)
+  const target = match ? parseInt(match[1], 10) : 0
+  const suffix = match ? match[2] : ''
+  const [n, setN] = useState(0)
+
+  useEffect(() => {
+    if (!inView || !match) return
+    const duration = 1500
+    const stepMs = 30
+    const steps = Math.ceil(duration / stepMs)
+    let current = 0
+    const inc = target / steps
+    const id = setInterval(() => {
+      current += inc
+      if (current >= target) {
+        setN(target)
+        clearInterval(id)
+      } else {
+        setN(Math.floor(current))
+      }
+    }, stepMs)
+    return () => clearInterval(id)
+  }, [inView, target, match])
+
+  return (
+    <span ref={ref}>
+      {match ? `${n}${suffix}` : value}
+    </span>
+  )
+}
+
+/* ============================================================
    ICONS — minimal line glyphs (beige)
    ============================================================ */
 function Icon({ name }) {
@@ -187,7 +241,7 @@ function Nav() {
             </a>
           ))}
           <a href="#contact">
-            <button
+            <PressButton
               style={{
                 background: C.accent,
                 color: C.bg,
@@ -199,7 +253,7 @@ function Nav() {
               }}
             >
               Book a Call
-            </button>
+            </PressButton>
           </a>
         </div>
 
@@ -288,7 +342,7 @@ function Nav() {
                 </a>
               ))}
               <a href="#contact" onClick={() => setOpen(false)}>
-                <button
+                <PressButton
                   style={{
                     marginTop: 14,
                     width: '100%',
@@ -301,7 +355,7 @@ function Nav() {
                   }}
                 >
                   Book a Call
-                </button>
+                </PressButton>
               </a>
             </div>
           </motion.div>
@@ -331,10 +385,11 @@ function Hero() {
         overflow: 'hidden',
       }}
     >
-      {/* Animated dot grid */}
-      <div
+      {/* Animated dot grid — slow drift */}
+      <motion.div
         aria-hidden
-        className="lithos-hero-grid"
+        animate={{ backgroundPosition: ['0px 0px', '40px 40px'] }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
         style={{
           position: 'absolute',
           inset: '-40px',
@@ -402,11 +457,8 @@ function Hero() {
           Systems-first growth agency
         </motion.div>
 
-        <motion.h1
+        <h1
           className="lithos-hero-title"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.05 }}
           style={{
             fontSize: isMobile ? 36 : 64,
             fontWeight: 700,
@@ -416,10 +468,22 @@ function Hero() {
             marginBottom: 26,
           }}
         >
-          Building the Foundation
-          <br />
-          Behind Scalable Brands
-        </motion.h1>
+          {'Building the Foundation Behind Scalable Brands'
+            .split(' ')
+            .map((word, i) => (
+              <span key={i}>
+                <motion.span
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08, duration: 0.5 }}
+                  style={{ display: 'inline-block' }}
+                >
+                  {word}
+                </motion.span>
+                {i === 2 ? <br /> : ' '}
+              </span>
+            ))}
+        </h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -449,7 +513,7 @@ function Hero() {
           }}
         >
           <a href="#contact">
-            <button
+            <PressButton
               style={{
                 background: C.accent,
                 color: C.bg,
@@ -461,10 +525,10 @@ function Hero() {
               }}
             >
               Book Strategy Call
-            </button>
+            </PressButton>
           </a>
           <a href="#services">
-            <button
+            <PressButton
               style={{
                 background: 'transparent',
                 color: C.accent,
@@ -477,7 +541,7 @@ function Hero() {
               }}
             >
               See Our Work
-            </button>
+            </PressButton>
           </a>
         </motion.div>
 
@@ -696,9 +760,16 @@ function Services() {
           }}
         >
           {SERVICES.map((s, i) => (
-            <Reveal key={s.title} delay={i * 0.08} style={{ height: '100%' }}>
+            <motion.div
+              key={s.title}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              viewport={{ once: true }}
+              style={{ height: '100%' }}
+            >
               <ServiceCard s={s} />
-            </Reveal>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -977,7 +1048,7 @@ function Stats() {
                         marginBottom: 14,
                       }}
                     >
-                      {st.value}
+                      <CountUp value={st.value} />
                     </div>
                     <div
                       style={{
@@ -1178,7 +1249,7 @@ function ContactForm() {
         rows={4}
       />
       {error && <p style={{ fontSize: 13.5, color: '#e0a0a0' }}>{error}</p>}
-      <button
+      <PressButton
         type="submit"
         disabled={submitting}
         style={{
@@ -1193,7 +1264,7 @@ function ContactForm() {
         }}
       >
         {submitting ? 'Sending…' : 'Send Message'}
-      </button>
+      </PressButton>
     </form>
   )
 }
@@ -1236,7 +1307,7 @@ function CTA() {
             Book a free strategy call and we’ll map out exactly what your
             business needs.
           </p>
-          <button
+          <PressButton
             onClick={() =>
               document
                 .getElementById('contact-form-anchor')
@@ -1253,7 +1324,7 @@ function CTA() {
             }}
           >
             Book Strategy Call
-          </button>
+          </PressButton>
           <p style={{ marginTop: 18, fontSize: 13, color: C.muted }}>
             No commitment. 30 minutes. Real recommendations.
           </p>
@@ -1490,14 +1561,15 @@ function CookieNotice() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
+    let alreadyAccepted = false
     try {
-      if (localStorage.getItem('lithos_cookie_ok') !== 'true') {
-        const t = setTimeout(() => setVisible(true), 1600)
-        return () => clearTimeout(t)
-      }
+      alreadyAccepted = localStorage.getItem('lithos_cookie_ok') === 'true'
     } catch {
-      setVisible(true)
+      alreadyAccepted = false
     }
+    if (alreadyAccepted) return
+    const t = setTimeout(() => setVisible(true), 1600)
+    return () => clearTimeout(t)
   }, [])
 
   function accept() {
@@ -1540,7 +1612,7 @@ function CookieNotice() {
           >
             We use cookies to improve your experience.
           </span>
-          <button
+          <PressButton
             onClick={accept}
             style={{
               flexShrink: 0,
@@ -1553,7 +1625,7 @@ function CookieNotice() {
             }}
           >
             Accept
-          </button>
+          </PressButton>
         </motion.div>
       )}
     </AnimatePresence>
@@ -1567,13 +1639,6 @@ export default function App() {
   return (
     <div style={{ background: C.bg, color: C.text, fontFamily: FONT }}>
       <style>{`
-        .lithos-hero-grid {
-          animation: lithosGridDrift 24s linear infinite;
-        }
-        @keyframes lithosGridDrift {
-          from { background-position: 0px 0px; }
-          to { background-position: 40px 40px; }
-        }
         .lithos-whatsapp .lithos-wa-tip {
           position: absolute;
           right: 70px;
