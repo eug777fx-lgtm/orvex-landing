@@ -1,5 +1,21 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
+
+/* ============================================================
+   RESPONSIVE HOOK
+   ============================================================ */
+function useIsMobile(breakpoint = 860) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+  )
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint)
+    window.addEventListener('resize', onResize)
+    onResize()
+    return () => window.removeEventListener('resize', onResize)
+  }, [breakpoint])
+  return isMobile
+}
 
 /* ============================================================
    LITHOS LABS — DESIGN SYSTEM
@@ -17,7 +33,7 @@ const FONT =
   "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 const MAXW = 1180
-const PAD = 110
+const PAD = 80
 
 /* ============================================================
    REVEAL — scroll-in animation wrapper
@@ -299,6 +315,7 @@ function Nav() {
    HERO
    ============================================================ */
 function Hero() {
+  const isMobile = useIsMobile()
   return (
     <section
       id="hero"
@@ -391,11 +408,11 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.05 }}
           style={{
-            fontSize: 64,
+            fontSize: isMobile ? 36 : 64,
             fontWeight: 700,
             color: C.text,
             letterSpacing: '-0.035em',
-            lineHeight: 1.04,
+            lineHeight: 1.06,
             marginBottom: 26,
           }}
         >
@@ -1414,6 +1431,136 @@ function WhatsApp() {
 }
 
 /* ============================================================
+   LOADING SCREEN
+   ============================================================ */
+function LoadingScreen() {
+  const [show, setShow] = useState(true)
+
+  useEffect(() => {
+    const t = setTimeout(() => setShow(false), 1200)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: C.bg,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
+            {/* Organic stone shape */}
+            <svg
+              width="76"
+              height="76"
+              viewBox="0 0 100 100"
+              fill="none"
+              stroke={C.accent}
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M28 22 C42 12, 66 14, 78 30 C88 44, 86 66, 70 78 C54 90, 30 86, 19 70 C9 55, 14 32, 28 22 Z" />
+            </svg>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+/* ============================================================
+   COOKIE NOTICE
+   ============================================================ */
+function CookieNotice() {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('lithos_cookie_ok') !== 'true') {
+        const t = setTimeout(() => setVisible(true), 1600)
+        return () => clearTimeout(t)
+      }
+    } catch {
+      setVisible(true)
+    }
+  }, [])
+
+  function accept() {
+    try {
+      localStorage.setItem('lithos_cookie_ok', 'true')
+    } catch {
+      /* ignore */
+    }
+    setVisible(false)
+  }
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 30 }}
+          transition={{ duration: 0.4 }}
+          className="lithos-cookie"
+          style={{
+            position: 'fixed',
+            bottom: 18,
+            left: 18,
+            zIndex: 95,
+            maxWidth: 420,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            padding: '14px 18px',
+            borderRadius: 12,
+            background: 'rgba(20,20,22,0.92)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <span
+            style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.5, flex: 1 }}
+          >
+            We use cookies to improve your experience.
+          </span>
+          <button
+            onClick={accept}
+            style={{
+              flexShrink: 0,
+              background: C.accent,
+              color: C.bg,
+              fontSize: 13,
+              fontWeight: 600,
+              padding: '9px 18px',
+              borderRadius: 8,
+            }}
+          >
+            Accept
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+/* ============================================================
    APP
    ============================================================ */
 export default function App() {
@@ -1447,6 +1594,7 @@ export default function App() {
           transform: translateX(0);
         }
         select option { color: ${C.text}; }
+        section[id] { scroll-margin-top: 86px; }
         @media (max-width: 860px) {
           .lithos-desktop-nav { display: none !important; }
           .lithos-hamburger { display: flex !important; }
@@ -1457,8 +1605,11 @@ export default function App() {
           .lithos-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 36px 20px !important; }
           .lithos-footer-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
           .lithos-form-row { grid-template-columns: 1fr !important; }
+          .lithos-section { padding-top: 40px !important; padding-bottom: 40px !important; }
+          .lithos-cookie { left: 12px; right: 12px; max-width: none; }
         }
       `}</style>
+      <LoadingScreen />
       <Nav />
       <main>
         <Hero />
@@ -1470,6 +1621,7 @@ export default function App() {
       </main>
       <Footer />
       <WhatsApp />
+      <CookieNotice />
     </div>
   )
 }
