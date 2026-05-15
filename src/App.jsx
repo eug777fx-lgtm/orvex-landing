@@ -1,1627 +1,1059 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  AnimatePresence,
-  motion,
-  useInView,
-  useMotionValue,
-  useScroll,
-  useSpring,
-  useTransform,
-} from 'framer-motion'
-import Lenis from '@studio-freight/lenis'
-import {
-  Globe,
-  AlertCircle,
-  TrendingDown,
-  Check,
-  ArrowRight,
-  ChevronDown,
-  MessageCircle,
-  Plus,
-  Minus,
-  Quote,
-} from 'lucide-react'
+import { useState, useRef } from 'react'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
 
-const colors = {
-  bg: '#0c0c0e',
-  bgAlt: '#111114',
-  card: 'rgba(17,17,20,0.8)',
-  border: 'rgba(255,255,255,0.08)',
-  borderBright: 'rgba(255,255,255,0.18)',
-  text: '#ffffff',
-  muted: 'rgba(255,255,255,0.55)',
-  faint: 'rgba(255,255,255,0.4)',
+/* ============================================================
+   LITHOS LABS — DESIGN SYSTEM
+   ============================================================ */
+const C = {
+  bg: '#0B0B0D',
+  accent: '#C2B59B',
+  text: '#F5F5F2',
+  muted: 'rgba(242,237,228,0.45)',
+  border: 'rgba(194,181,155,0.1)',
+  card: 'rgba(194,181,155,0.03)',
 }
 
-const glassCard = {
-  background: colors.card,
-  border: `0.5px solid ${colors.border}`,
-  borderRadius: 16,
-  padding: '2rem',
-  backdropFilter: 'blur(12px) saturate(160%)',
-  WebkitBackdropFilter: 'blur(12px) saturate(160%)',
-}
+const FONT =
+  "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
-const EASE = [0.16, 1, 0.3, 1]
-const WHATSAPP_NUMBER = '+2971234567'
+const MAXW = 1180
+const PAD = 110
 
-/* ---------------- Background ---------------- */
-
-function Background() {
+/* ============================================================
+   REVEAL — scroll-in animation wrapper
+   ============================================================ */
+function Reveal({ children, delay = 0, y = 30, style }) {
   return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 0,
-        pointerEvents: 'none',
-        overflow: 'hidden',
-      }}
+    <motion.div
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      style={style}
     >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'radial-gradient(ellipse 80% 50% at 20% 10%, rgba(99,102,241,0.07) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 90%, rgba(45,90,180,0.05) 0%, transparent 55%)',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          top: '-15%',
-          left: '-10%',
-          width: 700,
-          height: 700,
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(79,70,229,0.14) 0%, rgba(79,70,229,0.04) 40%, transparent 70%)',
-          filter: 'blur(80px)',
-          animation: 'orbFloat1 18s ease-in-out infinite',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '-20%',
-          right: '-15%',
-          width: 800,
-          height: 800,
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(37,99,235,0.12) 0%, rgba(37,99,235,0.04) 40%, transparent 70%)',
-          filter: 'blur(90px)',
-          animation: 'orbFloat2 22s ease-in-out infinite',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          top: '40%',
-          left: '45%',
-          width: 500,
-          height: 500,
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(130,110,200,0.06) 0%, transparent 75%)',
-          filter: 'blur(100px)',
-          animation: 'orbFloat3 26s ease-in-out infinite',
-        }}
-      />
-    </div>
+      {children}
+    </motion.div>
   )
 }
 
-/* ---------------- Custom Cursor ---------------- */
-
-function CustomCursor() {
-  const [supportsHover, setSupportsHover] = useState(false)
-  const [hovering, setHovering] = useState(false)
-  const x = useMotionValue(-100)
-  const y = useMotionValue(-100)
-  const springX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.3 })
-  const springY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.3 })
-
-  useEffect(() => {
-    const media = window.matchMedia('(hover: hover) and (pointer: fine)')
-    const update = () => setSupportsHover(media.matches)
-    update()
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [])
-
-  useEffect(() => {
-    if (!supportsHover) return
-    document.documentElement.classList.add('cos-cursor-none')
-
-    function onMove(e) {
-      x.set(e.clientX)
-      y.set(e.clientY)
-    }
-    function onOver(e) {
-      const el = e.target
-      if (!(el instanceof Element)) return
-      if (el.closest('button, a, label, [role="button"], input, select, textarea')) {
-        setHovering(true)
-      } else {
-        setHovering(false)
-      }
-    }
-
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseover', onOver)
-    return () => {
-      document.documentElement.classList.remove('cos-cursor-none')
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseover', onOver)
-    }
-  }, [supportsHover, x, y])
-
-  if (!supportsHover) return null
-
-  return (
-    <>
-      <motion.div
-        className="cos-custom-cursor"
-        style={{
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          x,
-          y,
-          translateX: '-50%',
-          translateY: '-50%',
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          background: '#ffffff',
-          pointerEvents: 'none',
-          zIndex: 10000,
-          mixBlendMode: 'difference',
-        }}
-      />
-      <motion.div
-        className="cos-custom-cursor"
-        animate={{
-          width: hovering ? 48 : 32,
-          height: hovering ? 48 : 32,
-          background: hovering ? 'transparent' : 'rgba(255,255,255,0.08)',
-          borderColor: hovering ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.12)',
-        }}
-        transition={{ duration: 0.2, ease: EASE }}
-        style={{
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          x: springX,
-          y: springY,
-          translateX: '-50%',
-          translateY: '-50%',
-          borderRadius: '50%',
-          border: '1px solid rgba(255,255,255,0.12)',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          backdropFilter: 'blur(2px)',
-        }}
-      />
-    </>
-  )
+/* ============================================================
+   ICONS — minimal line glyphs (beige)
+   ============================================================ */
+function Icon({ name }) {
+  const common = {
+    width: 22,
+    height: 22,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: C.accent,
+    strokeWidth: 1.6,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+  }
+  switch (name) {
+    case 'crm':
+      return (
+        <svg {...common}>
+          <path d="M3 7h18M3 12h18M3 17h10" />
+          <circle cx="18" cy="17" r="2.5" />
+        </svg>
+      )
+    case 'ai':
+      return (
+        <svg {...common}>
+          <rect x="4" y="4" width="16" height="16" rx="3" />
+          <path d="M9 9h6M9 13h6M9 17h3" />
+          <circle cx="12" cy="2.5" r="0.6" fill={C.accent} />
+        </svg>
+      )
+    case 'brand':
+      return (
+        <svg {...common}>
+          <path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z" />
+        </svg>
+      )
+    case 'growth':
+      return (
+        <svg {...common}>
+          <path d="M3 17l5-5 4 4 8-9" />
+          <path d="M16 7h4v4" />
+        </svg>
+      )
+    case 'arrow':
+      return (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={C.accent}
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      )
+    default:
+      return null
+  }
 }
 
-/* ---------------- Navbar ---------------- */
+/* ============================================================
+   NAV
+   ============================================================ */
+const NAV_LINKS = [
+  { label: 'Services', href: '#services' },
+  { label: 'Work', href: '#why-lithos' },
+  { label: 'About', href: '#how-it-works' },
+]
 
-function Navbar({ onBook }) {
+function Nav() {
+  const [open, setOpen] = useState(false)
+
   return (
-    <motion.header
-      initial={{ y: -60, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: EASE }}
+    <header
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
-        height: 60,
-        background: 'rgba(8,8,8,0.75)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        borderBottom: `0.5px solid rgba(255,255,255,0.06)`,
         zIndex: 100,
-        display: 'flex',
-        alignItems: 'center',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
+        background: 'rgba(11,11,13,0.65)',
+        borderBottom: `1px solid ${C.border}`,
       }}
     >
-      <div
-        className="cos-container"
+      <nav
         style={{
+          maxWidth: MAXW,
+          margin: '0 auto',
+          padding: '0 28px',
+          height: 70,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          width: '100%',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontWeight: 700, fontSize: 18, color: '#fff', letterSpacing: '-0.02em' }}>
-            COS
-          </span>
-          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, letterSpacing: '0.08em', fontWeight: 500 }}>
-            STUDIOS
-          </span>
-        </div>
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={onBook}
+        <a
+          href="#hero"
           style={{
-            background: '#ffffff',
-            color: '#000000',
-            borderRadius: 999,
-            padding: '8px 20px',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
+            fontSize: 21,
+            fontWeight: 700,
+            color: C.text,
+            letterSpacing: '-0.02em',
           }}
         >
-          Book a Call
-        </motion.button>
-      </div>
-    </motion.header>
-  )
-}
+          Lithos{' '}
+          <span style={{ fontWeight: 300, color: C.accent }}>Labs</span>
+        </a>
 
-/* ---------------- AnimatedSection wrapper ---------------- */
-
-function AnimatedSection({ children, amount = 0.15 }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount })
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
-      animate={
-        inView
-          ? { opacity: 1, y: 0, filter: 'blur(0px)' }
-          : { opacity: 0, y: 40, filter: 'blur(8px)' }
-      }
-      transition={{ duration: 0.8, ease: EASE }}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-function Section({ children, style, bg }) {
-  return (
-    <section
-      className="cos-section"
-      style={{
-        padding: '100px 0',
-        position: 'relative',
-        zIndex: 1,
-        background: bg || 'transparent',
-        ...style,
-      }}
-    >
-      <AnimatedSection>{children}</AnimatedSection>
-    </section>
-  )
-}
-
-/* ---------------- Shared pieces ---------------- */
-
-function SectionLabel({ children }) {
-  return (
-    <div
-      style={{
-        fontSize: 11,
-        letterSpacing: '0.15em',
-        color: 'rgba(255,255,255,0.3)',
-        fontWeight: 600,
-        textTransform: 'uppercase',
-        marginBottom: 18,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function SectionHeadline({ children, max = 640 }) {
-  return (
-    <h2
-      style={{
-        fontSize: 'clamp(28px, 4.5vw, 44px)',
-        fontWeight: 700,
-        letterSpacing: '-0.02em',
-        lineHeight: 1.15,
-        color: '#fff',
-        maxWidth: max,
-      }}
-    >
-      {children}
-    </h2>
-  )
-}
-
-function SectionSub({ children, max = 560 }) {
-  return (
-    <p
-      style={{
-        color: colors.muted,
-        fontSize: 16,
-        lineHeight: 1.6,
-        marginTop: 14,
-        maxWidth: max,
-      }}
-    >
-      {children}
-    </p>
-  )
-}
-
-const primaryBtn = {
-  background: '#ffffff',
-  color: '#000000',
-  borderRadius: 999,
-  padding: '14px 32px',
-  fontSize: 16,
-  fontWeight: 600,
-  cursor: 'pointer',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 8,
-}
-
-const ghostBtn = {
-  background: 'transparent',
-  color: '#ffffff',
-  border: `1px solid rgba(255,255,255,0.2)`,
-  borderRadius: 999,
-  padding: '14px 32px',
-  fontSize: 16,
-  fontWeight: 500,
-  cursor: 'pointer',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 8,
-}
-
-const smallGhostBtn = {
-  background: 'transparent',
-  color: '#ffffff',
-  border: `1px solid rgba(255,255,255,0.2)`,
-  borderRadius: 999,
-  padding: '10px 20px',
-  fontSize: 14,
-  fontWeight: 500,
-  cursor: 'pointer',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-}
-
-/* ---------------- Dashboard Mockup ---------------- */
-
-function DashboardMockup({ scrollY }) {
-  const rotateX = useTransform(scrollY, [0, 400], [8, 0])
-  const scale = useTransform(scrollY, [0, 400], [1, 0.98])
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.9, delay: 1.4, ease: EASE }}
-      style={{
-        position: 'relative',
-        maxWidth: 900,
-        width: '100%',
-        margin: '70px auto 0',
-        perspective: 1200,
-      }}
-    >
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        style={{
-          borderRadius: 20,
-          background: 'rgba(255,255,255,0.04)',
-          border: '0.5px solid rgba(255,255,255,0.12)',
-          boxShadow:
-            '0 40px 80px rgba(99,102,241,0.18), 0 0 0 0.5px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(20px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-          overflow: 'hidden',
-          transformStyle: 'preserve-3d',
-          rotateX,
-          scale,
-        }}
-      >
+        {/* Desktop links */}
         <div
+          className="lithos-desktop-nav"
+          style={{ display: 'flex', alignItems: 'center', gap: 36 }}
+        >
+          {NAV_LINKS.map((l) => (
+            <a
+              key={l.label}
+              href={l.href}
+              style={{
+                fontSize: 14.5,
+                color: C.muted,
+                fontWeight: 450,
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+            >
+              {l.label}
+            </a>
+          ))}
+          <a href="#contact">
+            <button
+              style={{
+                background: C.accent,
+                color: C.bg,
+                fontSize: 14,
+                fontWeight: 600,
+                padding: '10px 20px',
+                borderRadius: 9,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Book a Call
+            </button>
+          </a>
+        </div>
+
+        {/* Mobile hamburger */}
+        <button
+          className="lithos-hamburger"
+          aria-label="Menu"
+          onClick={() => setOpen((v) => !v)}
           style={{
-            display: 'grid',
-            gridTemplateColumns: '160px 1fr',
-            minHeight: 380,
+            display: 'none',
+            width: 30,
+            height: 30,
+            flexDirection: 'column',
+            justifyContent: 'center',
+            gap: 5,
           }}
         >
-          <div
+          <span
             style={{
-              borderRight: '0.5px solid rgba(255,255,255,0.06)',
-              padding: '20px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 6,
+              display: 'block',
+              height: 1.6,
+              width: 22,
+              background: C.text,
+              transition: 'transform 0.25s ease',
+              transform: open ? 'rotate(45deg) translate(4px,5px)' : 'none',
+            }}
+          />
+          <span
+            style={{
+              display: 'block',
+              height: 1.6,
+              width: 22,
+              background: C.text,
+              opacity: open ? 0 : 1,
+              transition: 'opacity 0.2s ease',
+            }}
+          />
+          <span
+            style={{
+              display: 'block',
+              height: 1.6,
+              width: 22,
+              background: C.text,
+              transition: 'transform 0.25s ease',
+              transform: open ? 'rotate(-45deg) translate(4px,-5px)' : 'none',
+            }}
+          />
+        </button>
+      </nav>
+
+      {/* Mobile dropdown */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              overflow: 'hidden',
+              borderBottom: `1px solid ${C.border}`,
+              background: 'rgba(11,11,13,0.95)',
             }}
           >
             <div
               style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                marginBottom: 14,
-                paddingLeft: 4,
+                flexDirection: 'column',
+                padding: '14px 28px 24px',
+                gap: 4,
               }}
             >
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '-0.01em',
-                  color: '#fff',
-                }}
-              >
-                COS
-              </span>
-              <span
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: '50%',
-                  background: '#6378ff',
-                  boxShadow: '0 0 8px rgba(99,120,255,0.6)',
-                }}
-              />
-            </div>
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '8px 10px',
-                  borderRadius: 8,
-                  background: i === 0 ? 'rgba(255,255,255,0.06)' : 'transparent',
-                }}
-              >
-                <span
+              {NAV_LINKS.map((l) => (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
                   style={{
-                    width: 14,
-                    height: 14,
-                    borderRadius: 4,
-                    background: 'rgba(255,255,255,0.12)',
-                  }}
-                />
-                <span
-                  style={{
-                    height: 8,
-                    flex: 1,
-                    borderRadius: 4,
-                    background: i === 0 ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.08)',
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-          <div style={{ padding: 22 }}>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: 12,
-                marginBottom: 20,
-              }}
-            >
-              {[
-                { label: 'LEADS', value: '24' },
-                { label: 'PIPELINE', value: '$4,200' },
-                { label: 'TASKS', value: '8' },
-                { label: 'WIN RATE', value: '67%' },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  style={{
-                    background: 'rgba(17,17,20,0.6)',
-                    border: '0.5px solid rgba(255,255,255,0.08)',
-                    borderRadius: 10,
-                    padding: '12px 14px',
+                    fontSize: 16,
+                    color: C.text,
+                    padding: '12px 0',
+                    borderBottom: `1px solid ${C.border}`,
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 9,
-                      letterSpacing: '0.08em',
-                      color: 'rgba(255,255,255,0.4)',
-                      textTransform: 'uppercase',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {stat.label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      color: '#fff',
-                      letterSpacing: '-0.02em',
-                      marginTop: 6,
-                    }}
-                  >
-                    {stat.value}
-                  </div>
-                </div>
+                  {l.label}
+                </a>
               ))}
-            </div>
-            <div
-              style={{
-                background: 'rgba(17,17,20,0.6)',
-                border: '0.5px solid rgba(255,255,255,0.08)',
-                borderRadius: 12,
-                padding: 20,
-                height: 200,
-                display: 'flex',
-                alignItems: 'flex-end',
-                gap: 10,
-              }}
-            >
-              {[55, 72, 48, 80, 64, 92, 70, 58, 84, 72, 96, 68].map((h, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${h}%` }}
-                  transition={{
-                    duration: 0.8,
-                    delay: 1.8 + i * 0.05,
-                    ease: EASE,
-                  }}
+              <a href="#contact" onClick={() => setOpen(false)}>
+                <button
                   style={{
-                    flex: 1,
-                    background:
-                      'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.15) 100%)',
-                    borderRadius: 3,
+                    marginTop: 14,
+                    width: '100%',
+                    background: C.accent,
+                    color: C.bg,
+                    fontSize: 15,
+                    fontWeight: 600,
+                    padding: '13px 0',
+                    borderRadius: 9,
                   }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
-}
-
-/* ---------------- Hero ---------------- */
-
-function Hero({ onBook, onServices }) {
-  const { scrollY } = useScroll()
-  const words = [
-    'Your',
-    'Business',
-    'Deserves',
-    'More',
-    'Than',
-    'a',
-    'Phone',
-    'Number.',
-  ]
-  return (
-    <section
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        zIndex: 1,
-        padding: '120px 24px 80px',
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        aria-hidden="true"
-        className="cos-grid-bg"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-      <div style={{ textAlign: 'center', maxWidth: 960, position: 'relative', zIndex: 1, width: '100%' }}>
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2, ease: EASE }}
-          style={{
-            fontSize: 12,
-            letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.4)',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            marginBottom: 26,
-          }}
-        >
-          More clients. Less chaos.
-        </motion.div>
-        <h1
-          style={{
-            fontSize: 'clamp(36px, 8vw, 80px)',
-            fontWeight: 700,
-            letterSpacing: '-0.035em',
-            lineHeight: 1.02,
-            color: '#ffffff',
-          }}
-        >
-          {words.map((w, i) => (
-            <motion.span
-              key={i}
-              initial={{ opacity: 0, filter: 'blur(12px)', y: 20 }}
-              animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
-              transition={{
-                duration: 0.7,
-                delay: 0.3 + i * 0.08,
-                ease: EASE,
-              }}
-              style={{ display: 'inline-block', marginRight: '0.28em' }}
-            >
-              {w}
-            </motion.span>
-          ))}
-        </h1>
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.85, duration: 0.6, ease: EASE }}
-          style={{
-            color: colors.muted,
-            fontSize: 'clamp(16px, 2.2vw, 20px)',
-            maxWidth: 620,
-            margin: '28px auto 0',
-            lineHeight: 1.55,
-          }}
-        >
-          We build professional websites and custom management systems for small businesses in Aruba and the Caribbean. Get more clients, stay organized, grow faster.
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.6, ease: EASE }}
-          style={{
-            display: 'flex',
-            gap: 12,
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            marginTop: 36,
-          }}
-        >
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={onBook}
-            style={primaryBtn}
-          >
-            Book a Free Call
-            <ArrowRight size={17} />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={onServices}
-            style={ghostBtn}
-          >
-            See Our Services →
-          </motion.button>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.6 }}
-          style={{
-            display: 'flex',
-            gap: 20,
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            marginTop: 28,
-            fontSize: 13,
-            color: 'rgba(255,255,255,0.4)',
-          }}
-        >
-          <span>✓ No contracts</span>
-          <span>✓ Delivered in 2 weeks</span>
-          <span>✓ Built for your business</span>
-        </motion.div>
-        <DashboardMockup scrollY={scrollY} />
-      </div>
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: 'rgba(255,255,255,0.35)',
-          animation: 'arrowBounce 2s ease-in-out infinite',
-          zIndex: 2,
-        }}
-      >
-        <ChevronDown size={20} />
-      </div>
-    </section>
-  )
-}
-
-/* ---------------- Marquee ---------------- */
-
-function Marquee() {
-  const items = [
-    'Plumbers',
-    'Electricians',
-    'Restaurants',
-    'Salons',
-    'HVAC',
-    'Pest Control',
-    'Cleaning',
-    'Barbershops',
-    'Gyms',
-    'Food Trucks',
-    'Landscaping',
-    'Clothing Stores',
-  ]
-  const line = items.join(' · ') + ' · '
-  return (
-    <div
-      style={{
-        width: '100%',
-        height: 44,
-        background: 'rgba(255,255,255,0.03)',
-        borderTop: '0.5px solid rgba(255,255,255,0.06)',
-        borderBottom: '0.5px solid rgba(255,255,255,0.06)',
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'center',
-        position: 'relative',
-        zIndex: 1,
-      }}
-    >
-      <div className="cos-marquee-track">
-        {[0, 1].map((k) => (
-          <span
-            key={k}
-            style={{
-              display: 'inline-block',
-              padding: '0 24px',
-              fontSize: 13,
-              color: 'rgba(255,255,255,0.4)',
-              letterSpacing: '0.05em',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {line}
-            {line}
-            {line}
-            {line}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ---------------- Problem ---------------- */
-
-function ProblemCard({ icon: Icon, title, text, index }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 60, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, amount: 0.3 }}
-      whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.2)' }}
-      transition={{ duration: 0.6, delay: index * 0.15, ease: EASE }}
-      style={glassCard}
-    >
-      <motion.div
-        whileHover={{ rotate: 5, scale: 1.1 }}
-        transition={{ duration: 0.3, ease: EASE }}
-        style={{
-          width: 42,
-          height: 42,
-          borderRadius: 12,
-          background: 'rgba(255,255,255,0.04)',
-          border: `0.5px solid ${colors.border}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 16,
-        }}
-      >
-        <Icon size={18} color="#fff" strokeWidth={1.8} />
-      </motion.div>
-      <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>
-        {title}
-      </h3>
-      <p style={{ color: colors.muted, fontSize: 14, lineHeight: 1.6, marginTop: 8 }}>
-        {text}
-      </p>
-    </motion.div>
-  )
-}
-
-function ProblemSection() {
-  return (
-    <Section bg={colors.bgAlt}>
-      <div className="cos-container">
-        <SectionLabel>The Problem</SectionLabel>
-        <SectionHeadline max={720}>
-          Most small businesses are invisible online — and losing clients because of it.
-        </SectionHeadline>
-        <SectionSub max={620}>
-          If someone searches for your service right now, can they find you? If not, you're losing jobs to competitors every single day.
-        </SectionSub>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 16,
-            marginTop: 48,
-          }}
-        >
-          <ProblemCard
-            index={0}
-            icon={Globe}
-            title="No Website"
-            text="Customers can't find you online. Your competitors are getting the jobs you should be getting."
-          />
-          <ProblemCard
-            index={1}
-            icon={AlertCircle}
-            title="No System"
-            text="Tracking customers in your head or on paper means lost follow-ups, forgotten jobs, and missed revenue."
-          />
-          <ProblemCard
-            index={2}
-            icon={TrendingDown}
-            title="No Growth"
-            text="Without the right tools, you're stuck doing everything manually instead of focusing on what matters."
-          />
-        </div>
-      </div>
-    </Section>
-  )
-}
-
-/* ---------------- Stats Bar ---------------- */
-
-function StatNumber({ target, prefix = '', suffix = '', isNumeric = true }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount: 0.5 })
-  const [value, setValue] = useState(isNumeric ? 0 : target)
-
-  useEffect(() => {
-    if (!isNumeric || !inView) return
-    const duration = 1500
-    const start = performance.now()
-    let raf
-    const step = (now) => {
-      const t = Math.min(1, (now - start) / duration)
-      const eased = 1 - Math.pow(1 - t, 3)
-      setValue(Math.floor(eased * Number(target)))
-      if (t < 1) raf = requestAnimationFrame(step)
-      else setValue(Number(target))
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-  }, [inView, target, isNumeric])
-
-  return (
-    <span ref={ref}>
-      {prefix}
-      {value}
-      {suffix}
-    </span>
-  )
-}
-
-function StatsBar() {
-  const stats = [
-    { value: <><StatNumber target={2} /> Week</>, label: 'Average Delivery' },
-    { value: <><StatNumber target={100} suffix="%" /></>, label: 'Custom Built' },
-    { value: 'Caribbean', label: 'Based & Serving' },
-    { value: '$0', label: 'Hidden Fees' },
-  ]
-  return (
-    <section
-      className="cos-section"
-      style={{ padding: '40px 0', position: 'relative', zIndex: 1 }}
-    >
-      <div className="cos-container">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.7, ease: EASE }}
-          style={{
-            ...glassCard,
-            padding: '28px 24px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 0,
-          }}
-        >
-          {stats.map((s, i) => (
-            <div
-              key={i}
-              style={{
-                padding: '0 20px',
-                borderLeft: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                textAlign: 'center',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 'clamp(22px, 3vw, 30px)',
-                  fontWeight: 700,
-                  color: '#fff',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.1,
-                }}
-              >
-                {s.value}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: 'rgba(255,255,255,0.45)',
-                  marginTop: 6,
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
-                  fontWeight: 500,
-                }}
-              >
-                {s.label}
-              </div>
-            </div>
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
-/* ---------------- Services ---------------- */
-
-function ServiceCard({ badge, title, description, items, price, cta, onClick, delay }) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount: 0.2 })
-
-  function onMove(e) {
-    const el = e.currentTarget
-    const rect = el.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    el.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.06), rgba(17,17,20,0.8) 60%)`
-  }
-  function onLeave(e) {
-    e.currentTarget.style.background = 'rgba(17,17,20,0.8)'
-  }
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 24 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-      transition={{ duration: 0.6, delay, ease: EASE }}
-      whileHover={{ rotateY: 2, rotateX: -1, scale: 1.01 }}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
-      style={{
-        ...glassCard,
-        padding: '2.5rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 18,
-        position: 'relative',
-        transformPerspective: 1000,
-        transformStyle: 'preserve-3d',
-        transition: 'background 0.3s ease, border-color 0.2s ease',
-      }}
-    >
-      {badge && (
-        <span
-          style={{
-            display: 'inline-flex',
-            alignSelf: 'flex-start',
-            padding: '4px 12px',
-            borderRadius: 999,
-            background: 'rgba(255,255,255,0.08)',
-            color: '#fff',
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: '0.02em',
-          }}
-        >
-          {badge}
-        </span>
-      )}
-      <div>
-        <h3 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
-          {title}
-        </h3>
-        <p style={{ color: colors.muted, fontSize: 15, marginTop: 10, lineHeight: 1.6 }}>
-          {description}
-        </p>
-      </div>
-      <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {items.map((item, i) => (
-          <li
-            key={i}
-            style={{
-              display: 'flex',
-              gap: 10,
-              fontSize: 14,
-              color: 'rgba(255,255,255,0.75)',
-            }}
-          >
-            <span
-              style={{
-                width: 18,
-                height: 18,
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.08)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                marginTop: 2,
-              }}
-            >
-              <Check size={11} color="#fff" strokeWidth={3} />
-            </span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-      <div
-        style={{
-          fontSize: 22,
-          fontWeight: 700,
-          color: '#fff',
-          letterSpacing: '-0.02em',
-          marginTop: 6,
-        }}
-      >
-        {price}
-      </div>
-      <motion.button
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-        onClick={onClick}
-        style={{ ...smallGhostBtn, alignSelf: 'flex-start', padding: '12px 24px', fontSize: 14 }}
-      >
-        {cta} <ArrowRight size={14} />
-      </motion.button>
-    </motion.div>
-  )
-}
-
-function ServicesSection({ onBook }) {
-  return (
-    <Section>
-      <div className="cos-container">
-        <SectionLabel>What We Build</SectionLabel>
-        <SectionHeadline max={720}>Two products. One goal: grow your business.</SectionHeadline>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: 20,
-            marginTop: 48,
-          }}
-        >
-          <ServiceCard
-            badge="Most Popular"
-            title="Professional Website"
-            description="A fast, modern website that shows up on Google and turns visitors into customers. Built specifically for your business and your industry."
-            items={[
-              'Custom design for your business',
-              'Mobile-friendly and fast',
-              'Shows up on Google searches',
-              'Contact form and booking ready',
-              'Delivered in 10–14 days',
-            ]}
-            price="Starting at $500"
-            cta="Get a Website"
-            onClick={onBook}
-            delay={0}
-          />
-          <ServiceCard
-            title="Business Management System"
-            description="A custom system to manage your customers, jobs, invoices, and follow-ups — all in one place. Built for how your business actually works."
-            items={[
-              'Customer database',
-              'Job and ticket tracking',
-              'Invoice management',
-              'Follow-up reminders',
-              'Dashboard with stats',
-            ]}
-            price="Starting at $1,000"
-            cta="Get a System"
-            onClick={onBook}
-            delay={0.1}
-          />
-        </div>
-        <div
-          style={{
-            marginTop: 28,
-            textAlign: 'center',
-            color: colors.muted,
-            fontSize: 14,
-          }}
-        >
-          Need both? Ask about our Full System bundle — Website + CRM from $2,000.{' '}
-          <button
-            type="button"
-            onClick={onBook}
-            style={{ color: '#fff', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}
-          >
-            → Get the bundle
-          </button>
-        </div>
-      </div>
-    </Section>
-  )
-}
-
-/* ---------------- Process ---------------- */
-
-function ProcessStep({ number, title, text, delay }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.5, delay, ease: EASE }}
-      style={{ ...glassCard, padding: '2rem', position: 'relative' }}
-    >
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        whileInView={{ scale: 1, opacity: 1 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: delay + 0.1 }}
-        style={{
-          fontSize: 42,
-          fontWeight: 800,
-          color: 'rgba(255,255,255,0.12)',
-          letterSpacing: '-0.04em',
-          lineHeight: 1,
-          display: 'inline-block',
-        }}
-      >
-        {number}
-      </motion.div>
-      <h3
-        style={{
-          fontSize: 18,
-          fontWeight: 700,
-          color: '#fff',
-          letterSpacing: '-0.01em',
-          marginTop: 14,
-        }}
-      >
-        {title}
-      </h3>
-      <p style={{ color: colors.muted, fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>
-        {text}
-      </p>
-    </motion.div>
-  )
-}
-
-function ProcessSection() {
-  return (
-    <Section bg={colors.bgAlt}>
-      <div className="cos-container">
-        <SectionLabel>The Process</SectionLabel>
-        <SectionHeadline max={720}>From first call to live system in under 30 days.</SectionHeadline>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 16,
-            marginTop: 48,
-            position: 'relative',
-          }}
-        >
-          <ProcessStep
-            number="01"
-            title="Book a Free Call"
-            text="We spend 30 minutes understanding your business, your problems, and what you actually need."
-            delay={0}
-          />
-          <ProcessStep
-            number="02"
-            title="We Build It"
-            text="We design and build your website or system — customized for your business, no templates."
-            delay={0.2}
-          />
-          <ProcessStep
-            number="03"
-            title="You Grow"
-            text="Your new website or system goes live. You start getting more clients and running more efficiently."
-            delay={0.4}
-          />
-        </div>
-        <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: EASE }}
-          style={{
-            transformOrigin: 'left',
-            height: 1,
-            background:
-              'linear-gradient(90deg, transparent, rgba(255,255,255,0.2) 20%, rgba(255,255,255,0.2) 80%, transparent)',
-            marginTop: 40,
-          }}
-        />
-      </div>
-    </Section>
-  )
-}
-
-/* ---------------- Benefits ---------------- */
-
-function BenefitCard({ title, text, delay }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      whileHover={{ borderColor: colors.borderBright, y: -4 }}
-      transition={{ duration: 0.5, delay, ease: EASE }}
-      style={{ ...glassCard, padding: '1.75rem' }}
-    >
-      <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>
-        {title}
-      </h3>
-      <p style={{ color: colors.muted, fontSize: 14, marginTop: 8, lineHeight: 1.6 }}>{text}</p>
-    </motion.div>
-  )
-}
-
-function BenefitsSection() {
-  return (
-    <Section>
-      <div className="cos-container">
-        <SectionLabel>The Results</SectionLabel>
-        <SectionHeadline max={720}>What changes when you work with us.</SectionHeadline>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 16,
-            marginTop: 48,
-          }}
-        >
-          <BenefitCard title="More Clients" text="Your website works 24/7 bringing in new customers even while you sleep." delay={0} />
-          <BenefitCard title="Save Time" text="Stop managing everything in your head. Your system tracks it all automatically." delay={0.08} />
-          <BenefitCard title="Look Professional" text="A modern website builds trust instantly. Customers choose you over competitors." delay={0.16} />
-          <BenefitCard title="Stay Organized" text="Never lose a customer or forget a follow-up again. Everything is in one place." delay={0.24} />
-        </div>
-      </div>
-    </Section>
-  )
-}
-
-/* ---------------- Testimonials ---------------- */
-
-const testimonials = [
-  {
-    quote:
-      'They built our website in 10 days. We started getting calls from new customers within the first week.',
-    name: 'Carlos M.',
-    business: 'Plumber, Oranjestad',
-  },
-  {
-    quote:
-      'The system they built replaced our notebooks completely. Now I can see all my jobs and customers in one place.',
-    name: 'Maria R.',
-    business: 'Cleaning Service, Noord',
-  },
-  {
-    quote:
-      'Professional, fast, and they actually understood what our business needed. Best investment we made.',
-    name: 'Ricardo F.',
-    business: 'Electrician, San Nicolas',
-  },
-]
-
-function TestimonialCard({ t, index }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.18)' }}
-      transition={{ duration: 0.6, delay: index * 0.12, ease: EASE }}
-      style={{ ...glassCard, padding: '2rem', position: 'relative', overflow: 'hidden' }}
-    >
-      <Quote
-        size={72}
-        strokeWidth={1}
-        style={{
-          position: 'absolute',
-          top: -14,
-          right: -10,
-          color: 'rgba(255,255,255,0.05)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, letterSpacing: '0.14em' }}>
-        ★★★★★
-      </div>
-      <p
-        style={{
-          color: '#fff',
-          fontSize: 15,
-          lineHeight: 1.65,
-          marginTop: 14,
-          position: 'relative',
-        }}
-      >
-        "{t.quote}"
-      </p>
-      <div style={{ marginTop: 20, borderTop: `0.5px solid ${colors.border}`, paddingTop: 14 }}>
-        <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{t.name}</div>
-        <div style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>{t.business}</div>
-      </div>
-    </motion.div>
-  )
-}
-
-function TestimonialsSection() {
-  return (
-    <Section bg={colors.bgAlt}>
-      <div className="cos-container">
-        <SectionLabel>What Clients Say</SectionLabel>
-        <SectionHeadline max={720}>
-          Real businesses. Real results.
-        </SectionHeadline>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 16,
-            marginTop: 48,
-          }}
-        >
-          {testimonials.map((t, i) => (
-            <TestimonialCard key={i} t={t} index={i} />
-          ))}
-        </div>
-      </div>
-    </Section>
-  )
-}
-
-/* ---------------- FAQ ---------------- */
-
-const faqs = [
-  {
-    q: 'How long does it take to build my website?',
-    a: 'Most websites are delivered in 10–14 days. CRM systems take 2–3 weeks depending on complexity.',
-  },
-  {
-    q: 'Do I need to be tech-savvy to use the system?',
-    a: 'Not at all. We build everything to be simple and train you how to use it. If you can use WhatsApp, you can use our systems.',
-  },
-  {
-    q: "What if I need changes after it's built?",
-    a: 'Every project includes a revision round. After that, we offer affordable monthly maintenance packages.',
-  },
-  {
-    q: 'Do you only work with businesses in Aruba?',
-    a: "We're based in Aruba but work with businesses across the Caribbean.",
-  },
-  {
-    q: 'How much does it cost?',
-    a: 'Websites start at $500. CRM systems start at $1,000. We also offer bundle pricing if you need both.',
-  },
-]
-
-function FAQItem({ q, a, isOpen, onToggle }) {
-  return (
-    <motion.div
-      layout
-      transition={{ layout: { duration: 0.4, ease: EASE } }}
-      style={{
-        ...glassCard,
-        padding: 0,
-        overflow: 'hidden',
-      }}
-    >
-      <motion.button
-        layout="position"
-        type="button"
-        onClick={onToggle}
-        style={{
-          width: '100%',
-          padding: '20px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          background: 'transparent',
-          textAlign: 'left',
-          cursor: 'pointer',
-        }}
-      >
-        <span style={{ color: '#fff', fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' }}>
-          {q}
-        </span>
-        <motion.span
-          animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.25, ease: EASE }}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.06)',
-            border: '0.5px solid rgba(255,255,255,0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <Plus size={14} color="#fff" />
-        </motion.span>
-      </motion.button>
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            key="body"
-            layout
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: EASE }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div
-              style={{
-                padding: '0 24px 22px',
-                color: colors.muted,
-                fontSize: 14,
-                lineHeight: 1.65,
-              }}
-            >
-              {a}
+                >
+                  Book a Call
+                </button>
+              </a>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </header>
+  )
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+function Hero() {
+  return (
+    <section
+      id="hero"
+      style={{
+        position: 'relative',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        padding: '120px 28px 80px',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Animated dot grid */}
+      <div
+        aria-hidden
+        className="lithos-hero-grid"
+        style={{
+          position: 'absolute',
+          inset: '-40px',
+          backgroundImage: `radial-gradient(circle, rgba(194,181,155,0.12) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+          maskImage:
+            'radial-gradient(ellipse 75% 55% at 50% 42%, rgba(0,0,0,0.9), transparent 75%)',
+          WebkitMaskImage:
+            'radial-gradient(ellipse 75% 55% at 50% 42%, rgba(0,0,0,0.9), transparent 75%)',
+          pointerEvents: 'none',
+        }}
+      />
+      {/* Soft beige glow */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 680,
+          height: 420,
+          background:
+            'radial-gradient(ellipse, rgba(194,181,155,0.10), transparent 70%)',
+          filter: 'blur(40px)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div
+        style={{
+          position: 'relative',
+          maxWidth: 880,
+          margin: '0 auto',
+          width: '100%',
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '7px 15px',
+            borderRadius: 999,
+            border: `1px solid ${C.border}`,
+            background: C.card,
+            fontSize: 12.5,
+            color: C.accent,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            marginBottom: 34,
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: C.accent,
+            }}
+          />
+          Systems-first growth agency
+        </motion.div>
+
+        <motion.h1
+          className="lithos-hero-title"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.05 }}
+          style={{
+            fontSize: 64,
+            fontWeight: 700,
+            color: C.text,
+            letterSpacing: '-0.035em',
+            lineHeight: 1.04,
+            marginBottom: 26,
+          }}
+        >
+          Building the Foundation
+          <br />
+          Behind Scalable Brands
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.15 }}
+          style={{
+            fontSize: 20,
+            color: C.muted,
+            lineHeight: 1.6,
+            maxWidth: 620,
+            margin: '0 auto 40px',
+          }}
+        >
+          We build CRM systems, AI automation, and content infrastructure for
+          businesses ready to scale.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.25 }}
+          style={{
+            display: 'flex',
+            gap: 14,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <a href="#contact">
+            <button
+              style={{
+                background: C.accent,
+                color: C.bg,
+                fontSize: 15.5,
+                fontWeight: 600,
+                padding: '15px 30px',
+                borderRadius: 11,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Book Strategy Call
+            </button>
+          </a>
+          <a href="#services">
+            <button
+              style={{
+                background: 'transparent',
+                color: C.accent,
+                fontSize: 15.5,
+                fontWeight: 600,
+                padding: '15px 30px',
+                borderRadius: 11,
+                border: `1px solid ${C.accent}`,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              See Our Work
+            </button>
+          </a>
+        </motion.div>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.4 }}
+          style={{
+            marginTop: 46,
+            fontSize: 13,
+            color: C.muted,
+            letterSpacing: '0.02em',
+          }}
+        >
+          Trusted by growing brands in Aruba and beyond
+        </motion.p>
+      </div>
+
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.9, duration: 0.6 }}
+        style={{
+          position: 'absolute',
+          bottom: 34,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <span style={{ fontSize: 11, color: C.muted, letterSpacing: '0.15em' }}>
+          SCROLL
+        </span>
+        <motion.div
+          animate={{ y: [0, 7, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            width: 1,
+            height: 34,
+            background: `linear-gradient(${C.accent}, transparent)`,
+          }}
+        />
+      </motion.div>
+    </section>
+  )
+}
+
+/* ============================================================
+   SHARED — Section header
+   ============================================================ */
+function SectionHeader({ kicker, title, sub, center = true }) {
+  return (
+    <div
+      style={{
+        textAlign: center ? 'center' : 'left',
+        maxWidth: center ? 680 : 'none',
+        margin: center ? '0 auto' : 0,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 12.5,
+          color: C.accent,
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          marginBottom: 18,
+          fontWeight: 600,
+        }}
+      >
+        {kicker}
+      </div>
+      <h2
+        style={{
+          fontSize: 42,
+          fontWeight: 700,
+          color: C.text,
+          letterSpacing: '-0.03em',
+          lineHeight: 1.12,
+          marginBottom: sub ? 18 : 0,
+        }}
+      >
+        {title}
+      </h2>
+      {sub && (
+        <p style={{ fontSize: 17, color: C.muted, lineHeight: 1.6 }}>{sub}</p>
+      )}
+    </div>
+  )
+}
+
+/* ============================================================
+   SERVICES
+   ============================================================ */
+const SERVICES = [
+  {
+    icon: 'crm',
+    title: 'CRM Systems',
+    desc: 'GoHighLevel setup, pipeline systems, lead tracking, and automations that never let an opportunity slip.',
+  },
+  {
+    icon: 'ai',
+    title: 'AI Marketing',
+    desc: 'Content generation, scheduling, brand-voice AI, and 24/7 automation that markets while you sleep.',
+  },
+  {
+    icon: 'brand',
+    title: 'Brand Identity',
+    desc: 'Logos, websites, visual systems, and brand strategy that make you look as serious as you are.',
+  },
+  {
+    icon: 'growth',
+    title: 'Growth Automation',
+    desc: 'Funnels, email systems, appointment booking, and integrations wired into one growth engine.',
+  },
+]
+
+function ServiceCard({ s }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <motion.div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      animate={{ y: hover ? -6 : 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      style={{
+        background: C.card,
+        border: `1px solid ${hover ? 'rgba(194,181,155,0.25)' : C.border}`,
+        borderRadius: 18,
+        padding: '34px 32px',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 220,
+        transition: 'border-color 0.25s ease',
+        height: '100%',
+      }}
+    >
+      <div
+        style={{
+          width: 50,
+          height: 50,
+          borderRadius: 13,
+          background: 'rgba(194,181,155,0.08)',
+          border: `1px solid ${C.border}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 22,
+        }}
+      >
+        <Icon name={s.icon} />
+      </div>
+      <h3
+        style={{
+          fontSize: 20,
+          fontWeight: 650,
+          color: C.text,
+          marginBottom: 10,
+          letterSpacing: '-0.02em',
+        }}
+      >
+        {s.title}
+      </h3>
+      <p
+        style={{
+          fontSize: 15,
+          color: C.muted,
+          lineHeight: 1.62,
+          flex: 1,
+        }}
+      >
+        {s.desc}
+      </p>
+      <div
+        style={{
+          marginTop: 22,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          transform: hover ? 'translateX(5px)' : 'translateX(0)',
+          opacity: hover ? 1 : 0.55,
+          transition: 'all 0.25s ease',
+        }}
+      >
+        <Icon name="arrow" />
+      </div>
     </motion.div>
   )
 }
 
-function FAQSection() {
-  const [openIdx, setOpenIdx] = useState(0)
+function Services() {
   return (
-    <Section>
-      <div className="cos-container" style={{ maxWidth: 760 }}>
-        <SectionLabel>Questions</SectionLabel>
-        <SectionHeadline max={720}>Everything you might be wondering.</SectionHeadline>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 40 }}>
-          {faqs.map((f, i) => (
-            <FAQItem
-              key={i}
-              q={f.q}
-              a={f.a}
-              isOpen={openIdx === i}
-              onToggle={() => setOpenIdx(openIdx === i ? -1 : i)}
-            />
+    <section
+      id="services"
+      className="lithos-section"
+      style={{ padding: `${PAD}px 28px` }}
+    >
+      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+        <Reveal>
+          <SectionHeader
+            kicker="What We Build"
+            title="Infrastructure, not band-aids"
+            sub="Four pillars that turn a scattered operation into a system that scales without you."
+          />
+        </Reveal>
+        <div
+          className="lithos-services-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 20,
+            marginTop: 60,
+          }}
+        >
+          {SERVICES.map((s, i) => (
+            <Reveal key={s.title} delay={i * 0.08} style={{ height: '100%' }}>
+              <ServiceCard s={s} />
+            </Reveal>
           ))}
         </div>
       </div>
-    </Section>
+    </section>
   )
 }
 
-/* ---------------- Booking Form ---------------- */
+/* ============================================================
+   HOW IT WORKS — The Lithos Framework
+   ============================================================ */
+const STEPS = [
+  {
+    n: '01',
+    title: 'Audit',
+    desc: 'We analyze your current systems and identify exactly where leads, time, and revenue are leaking.',
+  },
+  {
+    n: '02',
+    title: 'Structure',
+    desc: 'We build your CRM and automation infrastructure — the operational backbone your brand runs on.',
+  },
+  {
+    n: '03',
+    title: 'Scale',
+    desc: 'We launch growth systems and continuously optimize performance against real outcomes.',
+  },
+]
 
-const inputStyle = {
-  width: '100%',
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 10,
-  color: '#fff',
-  padding: '12px 16px',
-  fontSize: 15,
-  outline: 'none',
-  fontFamily: 'inherit',
+function HowItWorks() {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-80px' })
+
+  return (
+    <section
+      id="how-it-works"
+      className="lithos-section"
+      style={{ padding: `${PAD}px 28px`, background: 'rgba(194,181,155,0.015)' }}
+    >
+      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+        <Reveal>
+          <SectionHeader
+            kicker="The Lithos Framework"
+            title="Three steps to a system that scales"
+            sub="No guesswork. A repeatable path from chaos to compounding growth."
+          />
+        </Reveal>
+
+        <div
+          ref={ref}
+          className="lithos-steps"
+          style={{
+            position: 'relative',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 28,
+            marginTop: 70,
+          }}
+        >
+          {/* Connecting line */}
+          <div
+            aria-hidden
+            className="lithos-steps-line"
+            style={{
+              position: 'absolute',
+              top: 26,
+              left: '16%',
+              right: '16%',
+              height: 1,
+              background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)`,
+              opacity: 0.4,
+            }}
+          />
+          {STEPS.map((step, i) => (
+            <motion.div
+              key={step.n}
+              initial={{ opacity: 0, y: 30 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: i * 0.15 }}
+              style={{
+                position: 'relative',
+                textAlign: 'center',
+                padding: '0 12px',
+              }}
+            >
+              <div
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: '50%',
+                  margin: '0 auto 24px',
+                  background: C.bg,
+                  border: `1px solid ${C.accent}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: C.accent,
+                  fontSize: 16,
+                  fontWeight: 700,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {step.n}
+              </div>
+              <h3
+                style={{
+                  fontSize: 22,
+                  fontWeight: 650,
+                  color: C.text,
+                  marginBottom: 12,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {step.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: 15,
+                  color: C.muted,
+                  lineHeight: 1.62,
+                  maxWidth: 290,
+                  margin: '0 auto',
+                }}
+              >
+                {step.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
-const selectStyle = {
-  ...inputStyle,
-  appearance: 'none',
-  WebkitAppearance: 'none',
-  backgroundImage:
-    'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'rgba(255,255,255,0.5)\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><polyline points=\'6 9 12 15 18 9\'></polyline></svg>")',
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'right 14px center',
-  paddingRight: 36,
-  cursor: 'pointer',
+/* ============================================================
+   WHY LITHOS — Systems Over Chaos
+   ============================================================ */
+const BULLETS = [
+  'We build what most agencies won’t — full operational infrastructure.',
+  'AI-powered content that runs 24/7 without a team.',
+  'CRM systems that capture every lead automatically.',
+  'Measurable results, not vanity metrics.',
+]
+
+function WhyLithos() {
+  return (
+    <section
+      id="why-lithos"
+      className="lithos-section"
+      style={{ padding: `${PAD}px 28px` }}
+    >
+      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+        <Reveal>
+          <SectionHeader
+            kicker="Why Lithos"
+            title="Systems over chaos"
+            sub={null}
+            center={false}
+          />
+        </Reveal>
+        <div
+          className="lithos-why-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.1fr 1fr',
+            gap: 64,
+            marginTop: 56,
+            alignItems: 'center',
+          }}
+        >
+          <Reveal>
+            <blockquote
+              style={{
+                fontSize: 34,
+                fontWeight: 600,
+                color: C.text,
+                lineHeight: 1.28,
+                letterSpacing: '-0.025em',
+                margin: 0,
+              }}
+            >
+              <span style={{ color: C.accent, fontSize: 44, lineHeight: 0 }}>
+                “
+              </span>
+              Most businesses fail not because of bad products — but because of
+              bad systems.
+            </blockquote>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+              {BULLETS.map((b) => (
+                <div
+                  key={b}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 16,
+                  }}
+                >
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: C.accent,
+                      marginTop: 8,
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 16.5,
+                      color: C.text,
+                      lineHeight: 1.55,
+                      opacity: 0.85,
+                    }}
+                  >
+                    {b}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  )
 }
 
-const fieldLabel = {
-  fontSize: 12,
-  color: 'rgba(255,255,255,0.55)',
-  fontWeight: 500,
-  marginBottom: 6,
-  display: 'block',
+/* ============================================================
+   STATS
+   ============================================================ */
+const STATS = [
+  { value: '24/7', label: 'AI agents working for your brand' },
+  { value: '5 days', label: 'Average time to launch your CRM' },
+  { value: '3x', label: 'Average lead capture improvement' },
+  { value: '100%', label: 'Brand-isolated workflows' },
+]
+
+function Stats() {
+  return (
+    <section
+      id="results"
+      className="lithos-section"
+      style={{ padding: `${PAD}px 28px` }}
+    >
+      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+        <Reveal>
+          <div
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(194,181,155,0.05), rgba(194,181,155,0.02))',
+              border: `1px solid ${C.border}`,
+              borderRadius: 22,
+              padding: '64px 48px',
+            }}
+          >
+            <div
+              className="lithos-stats-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: 32,
+              }}
+            >
+              {STATS.map((st, i) => (
+                <Reveal key={st.value} delay={i * 0.08}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div
+                      style={{
+                        fontSize: 52,
+                        fontWeight: 700,
+                        color: C.accent,
+                        letterSpacing: '-0.03em',
+                        lineHeight: 1,
+                        marginBottom: 14,
+                      }}
+                    >
+                      {st.value}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 14.5,
+                        color: C.text,
+                        opacity: 0.7,
+                        lineHeight: 1.5,
+                        maxWidth: 180,
+                        margin: '0 auto',
+                      }}
+                    >
+                      {st.label}
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
 }
 
-function BookingForm() {
-  const [form, setForm] = useState({
-    name: '',
-    business_name: '',
-    phone: '',
-    email: '',
-    service_needed: 'Website',
-    message: '',
-  })
-  const [state, setState] = useState('idle')
-  const [errorMsg, setErrorMsg] = useState('')
+/* ============================================================
+   CTA + CONTACT FORM
+   ============================================================ */
+const SERVICE_OPTIONS = [
+  'CRM Setup',
+  'AI Marketing System',
+  'Brand Identity',
+  'Full Package',
+  'Not sure',
+]
 
-  function update(key, value) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+function ContactForm() {
+  const [sent, setSent] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  const inputStyle = {
+    width: '100%',
+    background: C.card,
+    border: `1px solid ${C.border}`,
+    borderRadius: 11,
+    padding: '14px 16px',
+    color: C.text,
+    fontSize: 15,
+    outline: 'none',
+    fontFamily: FONT,
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.name.trim() || !form.business_name.trim() || !form.phone.trim()) {
-      setErrorMsg('Please fill in your name, business, and phone.')
-      setState('error')
-      return
-    }
-    setState('submitting')
-    setErrorMsg('')
+    setSubmitting(true)
+    setError('')
+    const form = e.currentTarget
+    const data = new FormData(form)
     try {
-      const res = await fetch('/api/booking', {
+      const res = await fetch('https://formspree.io/f/REPLACE_WITH_YOUR_ID', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, created_at: new Date().toISOString() }),
+        body: data,
+        headers: { Accept: 'application/json' },
       })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || 'Submission failed')
+      if (res.ok) {
+        setSent(true)
+        form.reset()
+      } else {
+        setError(
+          'Something went wrong. Please try again or email us directly.'
+        )
       }
-      setState('success')
-    } catch (err) {
-      console.error(err)
-      setErrorMsg(err?.message || 'Something went wrong.')
-      setState('error')
+    } catch {
+      setError('Network error. Please try again or email us directly.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  if (state === 'success') {
+  if (sent) {
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
         style={{
-          ...glassCard,
-          padding: '3rem 2rem',
+          background: C.card,
+          border: `1px solid rgba(194,181,155,0.25)`,
+          borderRadius: 18,
+          padding: '56px 40px',
           textAlign: 'center',
+          maxWidth: 560,
+          margin: '48px auto 0',
         }}
       >
         <div
@@ -1629,25 +1061,42 @@ function BookingForm() {
             width: 56,
             height: 56,
             borderRadius: '50%',
-            background: 'rgba(255,255,255,0.08)',
+            background: 'rgba(194,181,155,0.12)',
+            border: `1px solid ${C.accent}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 20px',
+            margin: '0 auto 22px',
           }}
         >
-          <Check size={24} color="#fff" strokeWidth={2.5} />
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke={C.accent}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
         </div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>
-          We got your message!
-        </div>
-        <p style={{ color: colors.muted, marginTop: 10, fontSize: 15 }}>
-          We'll reach out within 24 hours to confirm your call.
+        <h3
+          style={{
+            fontSize: 22,
+            fontWeight: 650,
+            color: C.text,
+            marginBottom: 10,
+            letterSpacing: '-0.02em',
+          }}
+        >
+          Message sent — we’ll be in touch within 24 hours
+        </h3>
+        <p style={{ fontSize: 15, color: C.muted }}>
+          Thanks for reaching out. Keep an eye on your inbox.
         </p>
-        <p style={{ color: colors.faint, marginTop: 14, fontSize: 13 }}>
-          Talk soon, Eugene @ COS Studios
-        </p>
-      </div>
+      </motion.div>
     )
   }
 
@@ -1655,395 +1104,372 @@ function BookingForm() {
     <form
       onSubmit={handleSubmit}
       style={{
-        ...glassCard,
-        padding: '2.25rem',
+        maxWidth: 620,
+        margin: '52px auto 0',
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
+        textAlign: 'left',
       }}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
-        <div>
-          <label style={fieldLabel}>Full Name</label>
-          <input
-            style={inputStyle}
-            value={form.name}
-            onChange={(e) => update('name', e.target.value)}
-            placeholder="John Smith"
-            required
-          />
-        </div>
-        <div>
-          <label style={fieldLabel}>Business Name</label>
-          <input
-            style={inputStyle}
-            value={form.business_name}
-            onChange={(e) => update('business_name', e.target.value)}
-            placeholder="Acme Plumbing"
-            required
-          />
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
-        <div>
-          <label style={fieldLabel}>Phone Number</label>
-          <input
-            type="tel"
-            style={inputStyle}
-            value={form.phone}
-            onChange={(e) => update('phone', e.target.value)}
-            placeholder="+297 123 4567"
-            required
-          />
-        </div>
-        <div>
-          <label style={fieldLabel}>Email</label>
-          <input
-            type="email"
-            style={inputStyle}
-            value={form.email}
-            onChange={(e) => update('email', e.target.value)}
-            placeholder="you@business.com"
-          />
-        </div>
-      </div>
-      <div>
-        <label style={fieldLabel}>What do you need?</label>
-        <select
-          style={selectStyle}
-          value={form.service_needed}
-          onChange={(e) => update('service_needed', e.target.value)}
-        >
-          <option value="Website">Website</option>
-          <option value="CRM System">CRM System</option>
-          <option value="Both">Both</option>
-          <option value="Not Sure">Not Sure</option>
-        </select>
-      </div>
-      <div>
-        <label style={fieldLabel}>Tell us about your business</label>
-        <textarea
-          rows={3}
-          style={{ ...inputStyle, resize: 'vertical' }}
-          value={form.message}
-          onChange={(e) => update('message', e.target.value)}
-          placeholder="What do you do, how many customers, what's the goal..."
+      <div
+        className="lithos-form-row"
+        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}
+      >
+        <input
+          style={inputStyle}
+          name="name"
+          placeholder="Your name"
+          required
+          autoComplete="name"
+        />
+        <input
+          style={inputStyle}
+          name="business_name"
+          placeholder="Business name"
+          required
+          autoComplete="organization"
         />
       </div>
-      <motion.button
+      <input
+        style={inputStyle}
+        name="email"
+        type="email"
+        placeholder="Email address"
+        required
+        autoComplete="email"
+      />
+      <select
+        style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
+        name="service_needed"
+        defaultValue=""
+        required
+      >
+        <option value="" disabled style={{ background: C.bg }}>
+          What do you need?
+        </option>
+        {SERVICE_OPTIONS.map((o) => (
+          <option key={o} value={o} style={{ background: C.bg }}>
+            {o}
+          </option>
+        ))}
+      </select>
+      <textarea
+        style={{ ...inputStyle, minHeight: 120, resize: 'vertical' }}
+        name="message"
+        placeholder="Tell us about your biggest bottleneck"
+        rows={4}
+      />
+      {error && <p style={{ fontSize: 13.5, color: '#e0a0a0' }}>{error}</p>}
+      <button
         type="submit"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
-        disabled={state === 'submitting'}
+        disabled={submitting}
         style={{
-          width: '100%',
-          background: '#fff',
-          color: '#000',
-          borderRadius: 12,
-          padding: 16,
-          fontSize: 16,
+          background: C.accent,
+          color: C.bg,
+          fontSize: 15.5,
           fontWeight: 600,
-          cursor: state === 'submitting' ? 'not-allowed' : 'pointer',
-          opacity: state === 'submitting' ? 0.6 : 1,
-          marginTop: 4,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
+          padding: '15px 0',
+          borderRadius: 11,
+          marginTop: 6,
+          opacity: submitting ? 0.6 : 1,
         }}
       >
-        {state === 'submitting' ? 'Sending...' : 'Book My Free Call'}
-        {state !== 'submitting' && <ArrowRight size={17} />}
-      </motion.button>
-      {state === 'error' && (
-        <div
-          style={{
-            fontSize: 13,
-            color: 'rgba(255,255,255,0.75)',
-            background: 'rgba(255,80,80,0.08)',
-            border: '0.5px solid rgba(255,80,80,0.3)',
-            borderRadius: 10,
-            padding: '10px 14px',
-            textAlign: 'center',
-          }}
-        >
-          {errorMsg || 'Something went wrong.'}{' '}
-          <a
-            href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}`}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: '#fff', textDecoration: 'underline' }}
-          >
-            Please WhatsApp us directly.
-          </a>
-        </div>
-      )}
+        {submitting ? 'Sending…' : 'Send Message'}
+      </button>
     </form>
   )
 }
 
-function BookingSection() {
+function CTA() {
   return (
-    <Section bg={colors.bgAlt}>
-      <div className="cos-container">
-        <SectionLabel>Get Started</SectionLabel>
-        <SectionHeadline max={720}>Book your free 30-minute call.</SectionHeadline>
-        <SectionSub max={620}>
-          Tell us about your business and we'll show you exactly what we'd build for you — no commitment required.
-        </SectionSub>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 28,
-            marginTop: 48,
-            alignItems: 'start',
-          }}
-        >
-          <div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {[
-                'We analyze your current situation',
-                "We show you exactly what we'd build",
-                'You get a custom quote — no pressure',
-              ].map((item, i) => (
-                <li key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: '50%',
-                      background: 'rgba(255,255,255,0.08)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      marginTop: 1,
-                    }}
-                  >
-                    <Check size={12} color="#fff" strokeWidth={3} />
-                  </span>
-                  <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15 }}>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <div
-              style={{
-                marginTop: 28,
-                color: colors.muted,
-                fontSize: 13,
-              }}
-            >
-              We respond within 24 hours.
-            </div>
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                marginTop: 14,
-                color: '#fff',
-                fontSize: 13,
-                fontWeight: 600,
-                textDecoration: 'underline',
-                textUnderlineOffset: 3,
-              }}
-            >
-              Prefer WhatsApp? Message us directly →
-            </a>
-          </div>
-          <BookingForm />
-        </div>
-      </div>
-    </Section>
-  )
-}
-
-/* ---------------- WhatsApp FAB ---------------- */
-
-function WhatsAppFab() {
-  const [tooltip, setTooltip] = useState(false)
-  return (
-    <motion.a
-      href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g, '')}`}
-      target="_blank"
-      rel="noreferrer"
-      initial={{ x: 100, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ delay: 2, duration: 0.6, ease: EASE }}
-      whileHover={{ scale: 1.06 }}
-      whileTap={{ scale: 0.94 }}
-      onMouseEnter={() => setTooltip(true)}
-      onMouseLeave={() => setTooltip(false)}
+    <section
+      id="contact"
+      className="lithos-section"
       style={{
-        position: 'fixed',
-        bottom: 24,
-        right: 24,
-        width: 56,
-        height: 56,
-        borderRadius: '50%',
-        background: '#25D366',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#fff',
-        zIndex: 200,
-        animation: 'whatsappPulse 2.4s ease-out infinite',
+        padding: `${PAD}px 28px`,
+        background: 'rgba(194,181,155,0.015)',
+        borderTop: `1px solid ${C.border}`,
+        borderBottom: `1px solid ${C.border}`,
       }}
-      aria-label="Chat on WhatsApp"
     >
-      <MessageCircle size={24} strokeWidth={2} />
-      <AnimatePresence>
-        {tooltip && (
-          <motion.span
-            initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 8 }}
-            transition={{ duration: 0.2 }}
+      <div style={{ maxWidth: MAXW, margin: '0 auto', textAlign: 'center' }}>
+        <Reveal>
+          <h2
             style={{
-              position: 'absolute',
-              right: 68,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: '#111',
-              border: '0.5px solid rgba(255,255,255,0.1)',
-              color: '#fff',
-              padding: '6px 12px',
-              borderRadius: 8,
-              fontSize: 12,
-              whiteSpace: 'nowrap',
-              pointerEvents: 'none',
+              fontSize: 46,
+              fontWeight: 700,
+              color: C.text,
+              letterSpacing: '-0.03em',
+              lineHeight: 1.12,
+              marginBottom: 20,
             }}
           >
-            Chat on WhatsApp
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.a>
+            Ready to build on solid systems?
+          </h2>
+          <p
+            style={{
+              fontSize: 18,
+              color: C.muted,
+              maxWidth: 560,
+              margin: '0 auto 36px',
+              lineHeight: 1.6,
+            }}
+          >
+            Book a free strategy call and we’ll map out exactly what your
+            business needs.
+          </p>
+          <button
+            onClick={() =>
+              document
+                .getElementById('contact-form-anchor')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }
+            style={{
+              background: C.accent,
+              color: C.bg,
+              fontSize: 16,
+              fontWeight: 650,
+              padding: '17px 38px',
+              borderRadius: 12,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Book Strategy Call
+          </button>
+          <p style={{ marginTop: 18, fontSize: 13, color: C.muted }}>
+            No commitment. 30 minutes. Real recommendations.
+          </p>
+        </Reveal>
+
+        <div id="contact-form-anchor" />
+        <ContactForm />
+      </div>
+    </section>
   )
 }
 
-/* ---------------- Footer ---------------- */
-
-function Footer({ onBook }) {
+/* ============================================================
+   FOOTER
+   ============================================================ */
+function Footer() {
   return (
     <footer
       style={{
-        padding: '60px 0 40px',
-        borderTop: `0.5px solid ${colors.border}`,
-        background: 'rgba(8,8,8,0.4)',
-        position: 'relative',
-        zIndex: 1,
+        padding: '70px 28px 50px',
+        maxWidth: MAXW,
+        margin: '0 auto',
       }}
     >
       <div
-        className="cos-container"
+        className="lithos-footer-grid"
         style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 20,
+          display: 'grid',
+          gridTemplateColumns: '1.4fr 1fr 1fr',
+          gap: 40,
+          paddingBottom: 48,
+          borderBottom: `1px solid ${C.border}`,
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontWeight: 700, fontSize: 18 }}>COS</span>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, letterSpacing: '0.08em' }}>
-              STUDIOS
-            </span>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: C.text,
+              letterSpacing: '-0.02em',
+              marginBottom: 14,
+            }}
+          >
+            Lithos{' '}
+            <span style={{ fontWeight: 300, color: C.accent }}>Labs</span>
           </div>
-          <p style={{ color: colors.muted, fontSize: 13, marginTop: 8, maxWidth: 360 }}>
-            More clients. Less chaos.
+          <p
+            style={{
+              fontSize: 14.5,
+              color: C.muted,
+              lineHeight: 1.6,
+              maxWidth: 300,
+            }}
+          >
+            Building the foundation behind scalable brands.
           </p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={onBook}
-          style={{
-            background: '#fff',
-            color: '#000',
-            padding: '10px 22px',
-            borderRadius: 999,
-            fontWeight: 600,
-            fontSize: 13,
-          }}
-        >
-          Book a Call
-        </motion.button>
+
+        <div>
+          <div
+            style={{
+              fontSize: 12.5,
+              color: C.accent,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              marginBottom: 18,
+              fontWeight: 600,
+            }}
+          >
+            Services
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {SERVICES.map((s) => (
+              <a
+                key={s.title}
+                href="#services"
+                style={{ fontSize: 14.5, color: C.muted }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+              >
+                {s.title}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 12.5,
+              color: C.accent,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              marginBottom: 18,
+              fontWeight: 600,
+            }}
+          >
+            Contact
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <a
+              href="mailto:hello@lithoslabs.com"
+              style={{ fontSize: 14.5, color: C.muted }}
+            >
+              hello@lithoslabs.com
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ fontSize: 14.5, color: C.muted }}
+            >
+              Instagram
+            </a>
+            <span style={{ fontSize: 14.5, color: C.muted }}>Aruba</span>
+          </div>
+        </div>
       </div>
+
       <div
-        className="cos-container"
         style={{
-          color: 'rgba(255,255,255,0.3)',
-          fontSize: 12,
-          marginTop: 32,
-          paddingTop: 24,
-          borderTop: `0.5px solid ${colors.border}`,
+          paddingTop: 28,
+          fontSize: 13,
+          color: C.muted,
+          textAlign: 'center',
         }}
       >
-        © 2026 COS Studios. Aruba &amp; Caribbean.
+        © 2026 Lithos Labs. All rights reserved.
       </div>
     </footer>
   )
 }
 
-/* ---------------- App ---------------- */
-
-export default function App() {
-  const bookingRef = useRef(null)
-  const servicesRef = useRef(null)
-
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    })
-    let rafId
-    function raf(time) {
-      lenis.raf(time)
-      rafId = requestAnimationFrame(raf)
-    }
-    rafId = requestAnimationFrame(raf)
-    return () => {
-      cancelAnimationFrame(rafId)
-      lenis.destroy()
-    }
-  }, [])
-
-  function scrollToBooking() {
-    bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-  function scrollToServices() {
-    servicesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
+/* ============================================================
+   WHATSAPP FLOATING BUTTON
+   ============================================================ */
+function WhatsApp() {
   return (
-    <>
-      <CustomCursor />
-      <Background />
-      <Navbar onBook={scrollToBooking} />
-      <Hero onBook={scrollToBooking} onServices={scrollToServices} />
-      <Marquee />
-      <ProblemSection />
-      <StatsBar />
-      <div ref={servicesRef}>
-        <ServicesSection onBook={scrollToBooking} />
-      </div>
-      <ProcessSection />
-      <BenefitsSection />
-      <TestimonialsSection />
-      <FAQSection />
-      <div ref={bookingRef}>
-        <BookingSection />
-      </div>
-      <Footer onBook={scrollToBooking} />
-      <WhatsAppFab />
-    </>
+    <motion.a
+      href="https://wa.me/297XXXXXXX"
+      target="_blank"
+      rel="noreferrer"
+      aria-label="Chat on WhatsApp"
+      className="lithos-whatsapp"
+      animate={{ y: [0, -10, 0] }}
+      transition={{
+        duration: 0.6,
+        repeat: Infinity,
+        repeatDelay: 4.4,
+        ease: 'easeInOut',
+      }}
+      whileHover={{ scale: 1.08 }}
+      style={{
+        position: 'fixed',
+        bottom: 26,
+        right: 26,
+        zIndex: 90,
+        width: 58,
+        height: 58,
+        borderRadius: '50%',
+        background: '#25D366',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 8px 28px rgba(37,211,102,0.35)',
+      }}
+    >
+      <span className="lithos-wa-tip">Chat on WhatsApp</span>
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="#fff">
+        <path d="M16.003 3C9.38 3 4 8.38 4 15c0 2.34.68 4.52 1.85 6.36L4 29l7.83-1.78A11.9 11.9 0 0 0 16 27c6.62 0 12-5.38 12-12S22.62 3 16.003 3zm0 21.8c-1.9 0-3.66-.55-5.15-1.5l-.37-.23-4.65 1.06 1.07-4.53-.24-.38a9.74 9.74 0 0 1-1.5-5.2c0-5.4 4.4-9.8 9.83-9.8 2.62 0 5.08 1.02 6.93 2.88a9.73 9.73 0 0 1 2.87 6.92c0 5.42-4.4 9.8-9.79 9.78zm5.37-7.33c-.29-.15-1.74-.86-2.01-.96-.27-.1-.47-.15-.66.15-.2.29-.76.96-.93 1.16-.17.2-.34.22-.63.07-.29-.15-1.24-.46-2.36-1.46-.87-.78-1.46-1.74-1.63-2.03-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.2-.29.29-.49.1-.2.05-.37-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.5-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02.99-1.02 2.43s1.05 2.82 1.2 3.02c.15.2 2.06 3.15 5 4.42.7.3 1.24.48 1.67.62.7.22 1.34.19 1.84.12.56-.08 1.74-.71 1.98-1.4.24-.69.24-1.28.17-1.4-.07-.12-.27-.2-.56-.34z" />
+      </svg>
+    </motion.a>
+  )
+}
+
+/* ============================================================
+   APP
+   ============================================================ */
+export default function App() {
+  return (
+    <div style={{ background: C.bg, color: C.text, fontFamily: FONT }}>
+      <style>{`
+        .lithos-hero-grid {
+          animation: lithosGridDrift 24s linear infinite;
+        }
+        @keyframes lithosGridDrift {
+          from { background-position: 0px 0px; }
+          to { background-position: 40px 40px; }
+        }
+        .lithos-whatsapp .lithos-wa-tip {
+          position: absolute;
+          right: 70px;
+          background: ${C.text};
+          color: ${C.bg};
+          font-size: 13px;
+          font-weight: 600;
+          padding: 8px 12px;
+          border-radius: 8px;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transform: translateX(8px);
+          transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .lithos-whatsapp:hover .lithos-wa-tip {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        select option { color: ${C.text}; }
+        @media (max-width: 860px) {
+          .lithos-desktop-nav { display: none !important; }
+          .lithos-hamburger { display: flex !important; }
+          .lithos-services-grid { grid-template-columns: 1fr !important; }
+          .lithos-why-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
+          .lithos-steps { grid-template-columns: 1fr !important; gap: 40px !important; }
+          .lithos-steps-line { display: none !important; }
+          .lithos-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 36px 20px !important; }
+          .lithos-footer-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
+          .lithos-form-row { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <Nav />
+      <main>
+        <Hero />
+        <Services />
+        <HowItWorks />
+        <WhyLithos />
+        <Stats />
+        <CTA />
+      </main>
+      <Footer />
+      <WhatsApp />
+    </div>
   )
 }
