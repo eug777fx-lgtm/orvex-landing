@@ -75,35 +75,48 @@ function PressButton({ children, style, ...rest }) {
 function CountUp({ value }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
+
+  // Parse once into stable primitives (avoid putting the regex match
+  // object in the effect deps — it would re-run on every render).
   const match = String(value).match(/^(\d+)(.*)$/)
-  const target = match ? parseInt(match[1], 10) : 0
-  const suffix = match ? match[2] : ''
+  const isNumeric = match !== null
+  const target = isNumeric ? parseInt(match[1], 10) : 0
+  const suffix = isNumeric ? match[2] : ''
+
   const [n, setN] = useState(0)
 
   useEffect(() => {
-    if (!inView || !match) return
+    if (!inView || !isNumeric || target <= 0) return
+
     const duration = 1500
     const stepMs = 30
-    const steps = Math.ceil(duration / stepMs)
-    let current = 0
+    const steps = Math.max(1, Math.ceil(duration / stepMs))
     const inc = target / steps
-    const id = setInterval(() => {
+    let current = 0
+    let id = null
+
+    id = setInterval(() => {
       current += inc
       if (current >= target) {
         setN(target)
-        clearInterval(id)
+        if (id !== null) {
+          clearInterval(id)
+          id = null
+        }
       } else {
         setN(Math.floor(current))
       }
     }, stepMs)
-    return () => clearInterval(id)
-  }, [inView, target, match])
 
-  return (
-    <span ref={ref}>
-      {match ? `${n}${suffix}` : value}
-    </span>
-  )
+    return () => {
+      if (id !== null) {
+        clearInterval(id)
+        id = null
+      }
+    }
+  }, [inView, isNumeric, target])
+
+  return <span ref={ref}>{isNumeric ? `${n}${suffix}` : value}</span>
 }
 
 /* ============================================================
@@ -385,16 +398,16 @@ function Hero() {
         overflow: 'hidden',
       }}
     >
-      {/* Animated dot grid — slow drift */}
-      <motion.div
+      {/* Animated dot grid — slow drift (CSS keyframes) */}
+      <div
         aria-hidden
-        animate={{ backgroundPosition: ['0px 0px', '40px 40px'] }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+        className="lithos-hero-grid"
         style={{
           position: 'absolute',
           inset: '-40px',
           backgroundImage: `radial-gradient(circle, rgba(194,181,155,0.12) 1px, transparent 1px)`,
           backgroundSize: '40px 40px',
+          backgroundPosition: '0px 0px',
           maskImage:
             'radial-gradient(ellipse 75% 55% at 50% 42%, rgba(0,0,0,0.9), transparent 75%)',
           WebkitMaskImage:
@@ -1639,6 +1652,13 @@ export default function App() {
   return (
     <div style={{ background: C.bg, color: C.text, fontFamily: FONT }}>
       <style>{`
+        .lithos-hero-grid {
+          animation: lithosGridDrift 20s linear infinite;
+        }
+        @keyframes lithosGridDrift {
+          from { background-position: 0px 0px; }
+          to { background-position: 40px 40px; }
+        }
         .lithos-whatsapp .lithos-wa-tip {
           position: absolute;
           right: 70px;
