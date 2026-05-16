@@ -183,6 +183,48 @@ function Icon({ name }) {
 }
 
 /* ============================================================
+   METRIC ICONS — clean line glyphs (inherit color)
+   ============================================================ */
+function MetricIcon({ name }) {
+  const common = {
+    width: 16,
+    height: 16,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.5,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+  }
+  switch (name) {
+    case 'ai':
+      return (
+        <svg {...common}>
+          <rect x="3" y="11" width="18" height="10" rx="2" />
+          <path d="M12 11V7" />
+          <circle cx="12" cy="5" r="2" />
+          <path d="M8 11V9a4 4 0 018 0v2" />
+        </svg>
+      )
+    case 'speed':
+      return (
+        <svg {...common}>
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+      )
+    case 'growth':
+      return (
+        <svg {...common}>
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+          <polyline points="16 7 22 7 22 13" />
+        </svg>
+      )
+    default:
+      return null
+  }
+}
+
+/* ============================================================
    NAV
    ============================================================ */
 const NAV_LINKS = [
@@ -573,9 +615,9 @@ function Hero() {
           }}
         >
           {[
-            { icon: '🤖', label: 'AI Agents', value: '24/7 Active' },
-            { icon: '⚡', label: 'Setup Time', value: '5 Days Avg' },
-            { icon: '📈', label: 'Brands Served', value: 'Growing' },
+            { icon: 'ai', label: 'AI Agents', value: '24/7 Active' },
+            { icon: 'speed', label: 'Setup Time', value: '5 Days Avg' },
+            { icon: 'growth', label: 'Brands Served', value: 'Growing' },
           ].map((m, i) => (
             <motion.div
               key={m.label}
@@ -598,7 +640,16 @@ function Hero() {
                 gap: 10,
               }}
             >
-              <span style={{ fontSize: 20, lineHeight: 1 }}>{m.icon}</span>
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: C.accent,
+                }}
+              >
+                <MetricIcon name={m.icon} />
+              </span>
               <div style={{ textAlign: 'left' }}>
                 <div
                   style={{
@@ -895,419 +946,6 @@ function Services() {
               <ServiceCard s={s} />
             </motion.div>
           ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-/* ============================================================
-   CONTENT SHOWCASE — What We Create
-   ============================================================ */
-function Pill({ children, bg, color }) {
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        fontSize: 11,
-        fontWeight: 600,
-        letterSpacing: '0.02em',
-        padding: '4px 10px',
-        borderRadius: 999,
-        background: bg,
-        color,
-      }}
-    >
-      {children}
-    </span>
-  )
-}
-
-const SHOWCASE_CARD = {
-  background: '#0B0B0D',
-  border: '0.5px solid rgba(194,181,155,0.2)',
-  borderRadius: 16,
-  padding: 20,
-  breakInside: 'avoid',
-  WebkitColumnBreakInside: 'avoid',
-  marginBottom: 20,
-  width: '100%',
-  display: 'inline-block',
-}
-
-function HookCard({ platform, pillBg, pillColor, hook, caption, brand }) {
-  return (
-    <div style={SHOWCASE_CARD}>
-      <Pill bg={pillBg} color={pillColor}>
-        {platform}
-      </Pill>
-      <p
-        style={{
-          fontSize: 21,
-          fontWeight: 700,
-          color: '#F5F5F2',
-          lineHeight: 1.3,
-          letterSpacing: '-0.02em',
-          margin: '16px 0 12px',
-        }}
-      >
-        {hook}
-      </p>
-      <p
-        style={{
-          fontSize: 13.5,
-          color: C.muted,
-          lineHeight: 1.55,
-          marginBottom: 18,
-        }}
-      >
-        {caption}
-      </p>
-      <div
-        style={{
-          paddingTop: 14,
-          borderTop: `1px solid ${C.border}`,
-          fontSize: 11.5,
-          color: C.accent,
-          letterSpacing: '0.04em',
-        }}
-      >
-        {brand}
-      </div>
-    </div>
-  )
-}
-
-function Showcase() {
-  return (
-    <section
-      id="showcase"
-      className="lithos-section"
-      style={{ padding: `${PAD}px 28px` }}
-    >
-      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
-        <Reveal>
-          <SectionHeader
-            kicker="What We Create"
-            title="Content That Converts"
-            sub="Real outputs from our AI marketing system."
-          />
-        </Reveal>
-
-        <div
-          className="lithos-showcase-grid"
-          style={{ columnCount: 3, columnGap: 20, marginTop: 60 }}
-        >
-          {/* Card 1 — Hook (LIMITLESS) */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0 * 0.08 }}
-            viewport={{ once: true }}
-          >
-            <HookCard
-              platform="Instagram"
-              pillBg="rgba(139,92,246,0.16)"
-              pillColor="#b89cf5"
-              hook="I lost $800 because I didn't journal this trade."
-              caption="Your NQ trades are telling you something — most traders never listen until it's too late."
-              brand="LIMITLESS Trading Journal"
-            />
-          </motion.div>
-
-          {/* Card 2 — Image (AWATEC) */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 * 0.08 }}
-            viewport={{ once: true }}
-          >
-            <div
-              style={{
-                ...SHOWCASE_CARD,
-                border: '0.5px solid rgba(74,222,128,0.25)',
-              }}
-            >
-              <Pill bg="rgba(59,130,246,0.16)" color="#7eb2ff">
-                Facebook
-              </Pill>
-              <div
-                style={{
-                  marginTop: 16,
-                  height: 110,
-                  borderRadius: 10,
-                  background:
-                    'linear-gradient(135deg, rgba(74,222,128,0.12), rgba(194,181,155,0.06))',
-                  border: '0.5px solid rgba(74,222,128,0.18)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 30,
-                }}
-              >
-                💧
-              </div>
-              <p
-                style={{
-                  fontSize: 19,
-                  fontWeight: 700,
-                  color: '#F5F5F2',
-                  lineHeight: 1.3,
-                  letterSpacing: '-0.02em',
-                  margin: '16px 0 10px',
-                }}
-              >
-                Is your water meter spinning at night?
-              </p>
-              <p
-                style={{
-                  fontSize: 13.5,
-                  color: C.muted,
-                  lineHeight: 1.55,
-                  marginBottom: 18,
-                }}
-              >
-                Hidden leaks cost Aruba homeowners hundreds of florins every
-                month — silently.
-              </p>
-              <div
-                style={{
-                  paddingTop: 14,
-                  borderTop: `1px solid ${C.border}`,
-                  fontSize: 11.5,
-                  color: '#7ee0a8',
-                  letterSpacing: '0.04em',
-                }}
-              >
-                AWATEC Leak Detection
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Card 3 — Video */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2 * 0.08 }}
-            viewport={{ once: true }}
-          >
-            <div style={SHOWCASE_CARD}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <Pill bg="rgba(245,158,11,0.16)" color="#f5c46b">
-                  AI Video
-                </Pill>
-                <span style={{ fontSize: 11.5, color: C.muted }}>
-                  15 seconds
-                </span>
-              </div>
-              <div
-                style={{
-                  marginTop: 16,
-                  height: 140,
-                  borderRadius: 10,
-                  background:
-                    'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(11,11,13,1))',
-                  border: `0.5px solid ${C.border}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={C.accent}
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="M10 9l5 3-5 3V9z" />
-                  <path d="M2 8h20M7 4v4M17 4v4" />
-                </svg>
-              </div>
-              <p
-                style={{
-                  fontSize: 14.5,
-                  color: '#F5F5F2',
-                  fontWeight: 600,
-                  margin: '16px 0 18px',
-                  lineHeight: 1.5,
-                }}
-              >
-                Motion graphic generated by Remotion
-              </p>
-              <div
-                style={{
-                  paddingTop: 14,
-                  borderTop: `1px solid ${C.border}`,
-                  fontSize: 11.5,
-                  color: C.accent,
-                  letterSpacing: '0.04em',
-                }}
-              >
-                Lithos Labs
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Card 4 — Analytics */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 3 * 0.08 }}
-            viewport={{ once: true }}
-          >
-            <div style={SHOWCASE_CARD}>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: C.accent,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  marginBottom: 16,
-                }}
-              >
-                Performance
-              </div>
-              {[
-                ['Avg engagement score', '84/100'],
-                ['Content generated', '127 pieces'],
-                ['Brands managed', '3'],
-              ].map(([k, v]) => (
-                <div
-                  key={k}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 13.5,
-                    padding: '9px 0',
-                    borderBottom: `1px solid ${C.border}`,
-                  }}
-                >
-                  <span style={{ color: C.muted }}>{k}</span>
-                  <span style={{ color: '#F5F5F2', fontWeight: 650 }}>{v}</span>
-                </div>
-              ))}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: 8,
-                  height: 72,
-                  marginTop: 20,
-                }}
-              >
-                {[42, 65, 50, 80, 60, 92, 74].map((h, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      flex: 1,
-                      height: `${h}%`,
-                      borderRadius: 4,
-                      background:
-                        'linear-gradient(180deg, rgba(194,181,155,0.7), rgba(194,181,155,0.2))',
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Card 5 — Hook variant */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 4 * 0.08 }}
-            viewport={{ once: true }}
-          >
-            <HookCard
-              platform="Instagram"
-              pillBg="rgba(139,92,246,0.16)"
-              pillColor="#b89cf5"
-              hook="Most businesses fail not because of bad products. But because of bad systems."
-              caption="The brands that win aren't louder — they're better organized."
-              brand="Lithos Labs"
-            />
-          </motion.div>
-
-          {/* Card 6 — Schedule */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 5 * 0.08 }}
-            viewport={{ once: true }}
-          >
-            <div style={SHOWCASE_CARD}>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: C.accent,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  marginBottom: 18,
-                }}
-              >
-                Content Calendar
-              </div>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(7, 1fr)',
-                  gap: 10,
-                  textAlign: 'center',
-                }}
-              >
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, idx) => (
-                  <div
-                    key={idx}
-                    style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}
-                  >
-                    {d}
-                  </div>
-                ))}
-                {Array.from({ length: 28 }).map((_, idx) => {
-                  const scheduled = [
-                    0, 2, 4, 6, 9, 11, 13, 16, 18, 20, 23, 25, 27,
-                  ].includes(idx)
-                  return (
-                    <div
-                      key={idx}
-                      style={{
-                        height: 18,
-                        borderRadius: 5,
-                        background: scheduled
-                          ? 'rgba(194,181,155,0.55)'
-                          : 'rgba(194,181,155,0.08)',
-                      }}
-                    />
-                  )
-                })}
-              </div>
-              <div
-                style={{
-                  marginTop: 20,
-                  paddingTop: 14,
-                  borderTop: `1px solid ${C.border}`,
-                  fontSize: 13,
-                  color: '#F5F5F2',
-                  fontWeight: 600,
-                }}
-              >
-                31 posts scheduled this month
-              </div>
-            </div>
-          </motion.div>
         </div>
       </div>
     </section>
@@ -2182,6 +1820,7 @@ function WhatsApp() {
         height: 58,
         borderRadius: '50%',
         background: '#25D366',
+        color: '#fff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -2189,8 +1828,8 @@ function WhatsApp() {
       }}
     >
       <span className="lithos-wa-tip">Chat on WhatsApp</span>
-      <svg width="30" height="30" viewBox="0 0 32 32" fill="#fff">
-        <path d="M16.003 3C9.38 3 4 8.38 4 15c0 2.34.68 4.52 1.85 6.36L4 29l7.83-1.78A11.9 11.9 0 0 0 16 27c6.62 0 12-5.38 12-12S22.62 3 16.003 3zm0 21.8c-1.9 0-3.66-.55-5.15-1.5l-.37-.23-4.65 1.06 1.07-4.53-.24-.38a9.74 9.74 0 0 1-1.5-5.2c0-5.4 4.4-9.8 9.83-9.8 2.62 0 5.08 1.02 6.93 2.88a9.73 9.73 0 0 1 2.87 6.92c0 5.42-4.4 9.8-9.79 9.78zm5.37-7.33c-.29-.15-1.74-.86-2.01-.96-.27-.1-.47-.15-.66.15-.2.29-.76.96-.93 1.16-.17.2-.34.22-.63.07-.29-.15-1.24-.46-2.36-1.46-.87-.78-1.46-1.74-1.63-2.03-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.2-.29.29-.49.1-.2.05-.37-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.5-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02.99-1.02 2.43s1.05 2.82 1.2 3.02c.15.2 2.06 3.15 5 4.42.7.3 1.24.48 1.67.62.7.22 1.34.19 1.84.12.56-.08 1.74-.71 1.98-1.4.24-.69.24-1.28.17-1.4-.07-.12-.27-.2-.56-.34z" />
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
       </svg>
     </motion.a>
   )
@@ -2415,7 +2054,7 @@ export default function App() {
         }
         select option { color: ${C.text}; }
         section[id] { scroll-margin-top: 86px; }
-        .lithos-cta-watermark { font-size: clamp(70px, 22vw, 200px); }
+        .lithos-cta-watermark { font-size: clamp(80px, 15vw, 180px); }
         .lithos-footer-line {
           background: linear-gradient(90deg, transparent, rgba(194,181,155,0.45), transparent);
           background-size: 50% 100%;
@@ -2429,11 +2068,7 @@ export default function App() {
         @media (hover: none), (pointer: coarse) {
           .lithos-cursor-glow { display: none !important; }
         }
-        @media (max-width: 1024px) {
-          .lithos-showcase-grid { column-count: 2 !important; }
-        }
         @media (max-width: 860px) {
-          .lithos-showcase-grid { column-count: 1 !important; }
           .lithos-desktop-nav { display: none !important; }
           .lithos-hamburger { display: flex !important; }
           .lithos-services-grid { grid-template-columns: 1fr !important; }
@@ -2453,8 +2088,6 @@ export default function App() {
       <main>
         <Hero />
         <Services />
-        <Divider />
-        <Showcase />
         <Divider />
         <HowItWorks />
         <Divider />
