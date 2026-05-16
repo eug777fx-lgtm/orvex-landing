@@ -219,17 +219,39 @@ function Nav() {
           justifyContent: 'space-between',
         }}
       >
-        <a
-          href="#hero"
-          style={{
-            fontSize: 21,
-            fontWeight: 700,
-            color: C.text,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          Lithos{' '}
-          <span style={{ fontWeight: 300, color: C.accent }}>Labs</span>
+        <a href="#hero" aria-label="Lithos Labs home">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img
+              src="/lithos-logo.png"
+              alt="Lithos Labs"
+              loading="lazy"
+              style={{ width: 28, height: 28, objectFit: 'contain' }}
+            />
+            <div
+              style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}
+            >
+              <span
+                style={{
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: '#F5F5F2',
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                Lithos
+              </span>
+              <span
+                style={{
+                  fontWeight: 300,
+                  fontSize: 16,
+                  color: 'rgba(194,181,155,0.6)',
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                Labs
+              </span>
+            </div>
+          </div>
         </a>
 
         {/* Desktop links */}
@@ -396,45 +418,67 @@ function Hero() {
         textAlign: 'center',
         padding: '120px 28px 80px',
         overflow: 'hidden',
+        background: '#0B0B0D',
       }}
     >
-      {/* Animated dot grid — slow drift (CSS keyframes) */}
+      {/* Layer 2 — radial glow, top center */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          background:
+            'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(194,181,155,0.07) 0%, transparent 60%)',
+        }}
+      />
+      {/* Layer 3 — second glow, bottom left */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          background:
+            'radial-gradient(ellipse 50% 40% at -10% 100%, rgba(194,181,155,0.04) 0%, transparent 50%)',
+        }}
+      />
+      {/* Layer 4 — animated dot grid */}
       <div
         aria-hidden
         className="lithos-hero-grid"
         style={{
           position: 'absolute',
-          inset: '-40px',
-          backgroundImage: `radial-gradient(circle, rgba(194,181,155,0.12) 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
+          inset: 0,
+          backgroundImage:
+            'radial-gradient(circle, rgba(194,181,155,0.15) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
           backgroundPosition: '0px 0px',
           maskImage:
-            'radial-gradient(ellipse 75% 55% at 50% 42%, rgba(0,0,0,0.9), transparent 75%)',
+            'radial-gradient(ellipse 78% 60% at 50% 42%, rgba(0,0,0,0.9), transparent 78%)',
           WebkitMaskImage:
-            'radial-gradient(ellipse 75% 55% at 50% 42%, rgba(0,0,0,0.9), transparent 75%)',
+            'radial-gradient(ellipse 78% 60% at 50% 42%, rgba(0,0,0,0.9), transparent 78%)',
           pointerEvents: 'none',
         }}
       />
-      {/* Soft beige glow */}
+      {/* Layer 5 — noise texture overlay */}
       <div
         aria-hidden
         style={{
           position: 'absolute',
-          top: '20%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 680,
-          height: 420,
-          background:
-            'radial-gradient(ellipse, rgba(194,181,155,0.10), transparent 70%)',
-          filter: 'blur(40px)',
+          inset: 0,
+          opacity: 0.4,
           pointerEvents: 'none',
+          background:
+            'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.03\'/%3E%3C/svg%3E")',
         }}
       />
 
       <div
         style={{
           position: 'relative',
+          zIndex: 1,
           maxWidth: 880,
           margin: '0 auto',
           width: '100%',
@@ -477,24 +521,26 @@ function Hero() {
             fontWeight: 700,
             color: C.text,
             letterSpacing: '-0.035em',
-            lineHeight: 1.06,
+            lineHeight: 1.1,
             marginBottom: 26,
           }}
         >
           {'Building the Foundation Behind Scalable Brands'
             .split(' ')
             .map((word, i) => (
-              <span key={i}>
-                <motion.span
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08, duration: 0.5 }}
-                  style={{ display: 'inline-block' }}
-                >
-                  {word}
-                </motion.span>
-                {i === 2 ? <br /> : ' '}
-              </span>
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{
+                  delay: i * 0.1,
+                  duration: 0.7,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                style={{ display: 'inline-block', marginRight: '0.3em' }}
+              >
+                {word}
+              </motion.span>
             ))}
         </h1>
 
@@ -513,6 +559,71 @@ function Hero() {
           We build CRM systems, AI automation, and content infrastructure for
           businesses ready to scale.
         </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.35 }}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 14,
+            justifyContent: 'center',
+            marginBottom: 40,
+          }}
+        >
+          {[
+            { icon: '🤖', label: 'AI Agents', value: '24/7 Active' },
+            { icon: '⚡', label: 'Setup Time', value: '5 Days Avg' },
+            { icon: '📈', label: 'Brands Served', value: 'Growing' },
+          ].map((m, i) => (
+            <motion.div
+              key={m.label}
+              animate={{ y: [0, -6, 0] }}
+              transition={{
+                duration: 3 + i,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: i * 0.5,
+              }}
+              style={{
+                background: 'rgba(194,181,155,0.06)',
+                border: '0.5px solid rgba(194,181,155,0.15)',
+                borderRadius: 12,
+                padding: '12px 20px',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <span style={{ fontSize: 20, lineHeight: 1 }}>{m.icon}</span>
+              <div style={{ textAlign: 'left' }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: C.muted,
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {m.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 650,
+                    color: C.accent,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {m.value}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -784,6 +895,419 @@ function Services() {
               <ServiceCard s={s} />
             </motion.div>
           ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ============================================================
+   CONTENT SHOWCASE — What We Create
+   ============================================================ */
+function Pill({ children, bg, color }) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: '0.02em',
+        padding: '4px 10px',
+        borderRadius: 999,
+        background: bg,
+        color,
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
+const SHOWCASE_CARD = {
+  background: '#0B0B0D',
+  border: '0.5px solid rgba(194,181,155,0.2)',
+  borderRadius: 16,
+  padding: 20,
+  breakInside: 'avoid',
+  WebkitColumnBreakInside: 'avoid',
+  marginBottom: 20,
+  width: '100%',
+  display: 'inline-block',
+}
+
+function HookCard({ platform, pillBg, pillColor, hook, caption, brand }) {
+  return (
+    <div style={SHOWCASE_CARD}>
+      <Pill bg={pillBg} color={pillColor}>
+        {platform}
+      </Pill>
+      <p
+        style={{
+          fontSize: 21,
+          fontWeight: 700,
+          color: '#F5F5F2',
+          lineHeight: 1.3,
+          letterSpacing: '-0.02em',
+          margin: '16px 0 12px',
+        }}
+      >
+        {hook}
+      </p>
+      <p
+        style={{
+          fontSize: 13.5,
+          color: C.muted,
+          lineHeight: 1.55,
+          marginBottom: 18,
+        }}
+      >
+        {caption}
+      </p>
+      <div
+        style={{
+          paddingTop: 14,
+          borderTop: `1px solid ${C.border}`,
+          fontSize: 11.5,
+          color: C.accent,
+          letterSpacing: '0.04em',
+        }}
+      >
+        {brand}
+      </div>
+    </div>
+  )
+}
+
+function Showcase() {
+  return (
+    <section
+      id="showcase"
+      className="lithos-section"
+      style={{ padding: `${PAD}px 28px` }}
+    >
+      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+        <Reveal>
+          <SectionHeader
+            kicker="What We Create"
+            title="Content That Converts"
+            sub="Real outputs from our AI marketing system."
+          />
+        </Reveal>
+
+        <div
+          className="lithos-showcase-grid"
+          style={{ columnCount: 3, columnGap: 20, marginTop: 60 }}
+        >
+          {/* Card 1 — Hook (LIMITLESS) */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0 * 0.08 }}
+            viewport={{ once: true }}
+          >
+            <HookCard
+              platform="Instagram"
+              pillBg="rgba(139,92,246,0.16)"
+              pillColor="#b89cf5"
+              hook="I lost $800 because I didn't journal this trade."
+              caption="Your NQ trades are telling you something — most traders never listen until it's too late."
+              brand="LIMITLESS Trading Journal"
+            />
+          </motion.div>
+
+          {/* Card 2 — Image (AWATEC) */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 * 0.08 }}
+            viewport={{ once: true }}
+          >
+            <div
+              style={{
+                ...SHOWCASE_CARD,
+                border: '0.5px solid rgba(74,222,128,0.25)',
+              }}
+            >
+              <Pill bg="rgba(59,130,246,0.16)" color="#7eb2ff">
+                Facebook
+              </Pill>
+              <div
+                style={{
+                  marginTop: 16,
+                  height: 110,
+                  borderRadius: 10,
+                  background:
+                    'linear-gradient(135deg, rgba(74,222,128,0.12), rgba(194,181,155,0.06))',
+                  border: '0.5px solid rgba(74,222,128,0.18)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 30,
+                }}
+              >
+                💧
+              </div>
+              <p
+                style={{
+                  fontSize: 19,
+                  fontWeight: 700,
+                  color: '#F5F5F2',
+                  lineHeight: 1.3,
+                  letterSpacing: '-0.02em',
+                  margin: '16px 0 10px',
+                }}
+              >
+                Is your water meter spinning at night?
+              </p>
+              <p
+                style={{
+                  fontSize: 13.5,
+                  color: C.muted,
+                  lineHeight: 1.55,
+                  marginBottom: 18,
+                }}
+              >
+                Hidden leaks cost Aruba homeowners hundreds of florins every
+                month — silently.
+              </p>
+              <div
+                style={{
+                  paddingTop: 14,
+                  borderTop: `1px solid ${C.border}`,
+                  fontSize: 11.5,
+                  color: '#7ee0a8',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                AWATEC Leak Detection
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card 3 — Video */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2 * 0.08 }}
+            viewport={{ once: true }}
+          >
+            <div style={SHOWCASE_CARD}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Pill bg="rgba(245,158,11,0.16)" color="#f5c46b">
+                  AI Video
+                </Pill>
+                <span style={{ fontSize: 11.5, color: C.muted }}>
+                  15 seconds
+                </span>
+              </div>
+              <div
+                style={{
+                  marginTop: 16,
+                  height: 140,
+                  borderRadius: 10,
+                  background:
+                    'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(11,11,13,1))',
+                  border: `0.5px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={C.accent}
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="M10 9l5 3-5 3V9z" />
+                  <path d="M2 8h20M7 4v4M17 4v4" />
+                </svg>
+              </div>
+              <p
+                style={{
+                  fontSize: 14.5,
+                  color: '#F5F5F2',
+                  fontWeight: 600,
+                  margin: '16px 0 18px',
+                  lineHeight: 1.5,
+                }}
+              >
+                Motion graphic generated by Remotion
+              </p>
+              <div
+                style={{
+                  paddingTop: 14,
+                  borderTop: `1px solid ${C.border}`,
+                  fontSize: 11.5,
+                  color: C.accent,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Lithos Labs
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card 4 — Analytics */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 3 * 0.08 }}
+            viewport={{ once: true }}
+          >
+            <div style={SHOWCASE_CARD}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: C.accent,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  marginBottom: 16,
+                }}
+              >
+                Performance
+              </div>
+              {[
+                ['Avg engagement score', '84/100'],
+                ['Content generated', '127 pieces'],
+                ['Brands managed', '3'],
+              ].map(([k, v]) => (
+                <div
+                  key={k}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: 13.5,
+                    padding: '9px 0',
+                    borderBottom: `1px solid ${C.border}`,
+                  }}
+                >
+                  <span style={{ color: C.muted }}>{k}</span>
+                  <span style={{ color: '#F5F5F2', fontWeight: 650 }}>{v}</span>
+                </div>
+              ))}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  gap: 8,
+                  height: 72,
+                  marginTop: 20,
+                }}
+              >
+                {[42, 65, 50, 80, 60, 92, 74].map((h, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      flex: 1,
+                      height: `${h}%`,
+                      borderRadius: 4,
+                      background:
+                        'linear-gradient(180deg, rgba(194,181,155,0.7), rgba(194,181,155,0.2))',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card 5 — Hook variant */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 4 * 0.08 }}
+            viewport={{ once: true }}
+          >
+            <HookCard
+              platform="Instagram"
+              pillBg="rgba(139,92,246,0.16)"
+              pillColor="#b89cf5"
+              hook="Most businesses fail not because of bad products. But because of bad systems."
+              caption="The brands that win aren't louder — they're better organized."
+              brand="Lithos Labs"
+            />
+          </motion.div>
+
+          {/* Card 6 — Schedule */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 5 * 0.08 }}
+            viewport={{ once: true }}
+          >
+            <div style={SHOWCASE_CARD}>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: C.accent,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  marginBottom: 18,
+                }}
+              >
+                Content Calendar
+              </div>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: 10,
+                  textAlign: 'center',
+                }}
+              >
+                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, idx) => (
+                  <div
+                    key={idx}
+                    style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}
+                  >
+                    {d}
+                  </div>
+                ))}
+                {Array.from({ length: 28 }).map((_, idx) => {
+                  const scheduled = [
+                    0, 2, 4, 6, 9, 11, 13, 16, 18, 20, 23, 25, 27,
+                  ].includes(idx)
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        height: 18,
+                        borderRadius: 5,
+                        background: scheduled
+                          ? 'rgba(194,181,155,0.55)'
+                          : 'rgba(194,181,155,0.08)',
+                      }}
+                    />
+                  )
+                })}
+              </div>
+              <div
+                style={{
+                  marginTop: 20,
+                  paddingTop: 14,
+                  borderTop: `1px solid ${C.border}`,
+                  fontSize: 13,
+                  color: '#F5F5F2',
+                  fontWeight: 600,
+                }}
+              >
+                31 posts scheduled this month
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -1288,13 +1812,55 @@ function CTA() {
       id="contact"
       className="lithos-section"
       style={{
+        position: 'relative',
+        overflow: 'hidden',
         padding: `${PAD}px 28px`,
-        background: 'rgba(194,181,155,0.015)',
+        background: '#0B0B0D',
         borderTop: `1px solid ${C.border}`,
         borderBottom: `1px solid ${C.border}`,
       }}
     >
-      <div style={{ maxWidth: MAXW, margin: '0 auto', textAlign: 'center' }}>
+      {/* Centered beige glow */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          background:
+            'radial-gradient(ellipse 60% 80% at 50% 50%, rgba(194,181,155,0.08) 0%, transparent 60%)',
+        }}
+      />
+      {/* Giant watermark */}
+      <div
+        aria-hidden
+        className="lithos-cta-watermark"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          fontWeight: 900,
+          color: 'rgba(194,181,155,0.04)',
+          letterSpacing: '-10px',
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      >
+        LITHOS
+      </div>
+
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          maxWidth: MAXW,
+          margin: '0 auto',
+          textAlign: 'center',
+        }}
+      >
         <Reveal>
           <h2
             style={{
@@ -1355,47 +1921,162 @@ function CTA() {
    ============================================================ */
 function Footer() {
   return (
-    <footer
-      style={{
-        padding: '70px 28px 50px',
-        maxWidth: MAXW,
-        margin: '0 auto',
-      }}
-    >
+    <footer style={{ position: 'relative' }}>
+      {/* Animated gradient line at very top */}
       <div
-        className="lithos-footer-grid"
+        aria-hidden
+        className="lithos-footer-line"
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1.4fr 1fr 1fr',
-          gap: 40,
-          paddingBottom: 48,
-          borderBottom: `1px solid ${C.border}`,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 1,
+        }}
+      />
+      <div
+        style={{
+          padding: '70px 28px 50px',
+          maxWidth: MAXW,
+          margin: '0 auto',
         }}
       >
-        <div>
-          <div
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: C.text,
-              letterSpacing: '-0.02em',
-              marginBottom: 14,
-            }}
-          >
-            Lithos{' '}
-            <span style={{ fontWeight: 300, color: C.accent }}>Labs</span>
+        <div
+          className="lithos-footer-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.4fr 1fr 1fr',
+            gap: 40,
+            paddingBottom: 48,
+            borderBottom: `1px solid ${C.border}`,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                marginBottom: 14,
+              }}
+            >
+              <img
+                src="/lithos-logo.png"
+                alt="Lithos Labs"
+                loading="lazy"
+                style={{ width: 30, height: 30, objectFit: 'contain' }}
+              />
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                <span
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 18,
+                    color: '#F5F5F2',
+                    letterSpacing: '-0.5px',
+                  }}
+                >
+                  Lithos
+                </span>
+                <span
+                  style={{
+                    fontWeight: 300,
+                    fontSize: 18,
+                    color: 'rgba(194,181,155,0.6)',
+                    letterSpacing: '-0.5px',
+                  }}
+                >
+                  Labs
+                </span>
+              </div>
+            </div>
+            <p
+              style={{
+                fontSize: 14.5,
+                color: C.muted,
+                lineHeight: 1.6,
+                maxWidth: 300,
+                marginBottom: 20,
+              }}
+            >
+              Building the foundation behind scalable brands.
+            </p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 9,
+                  border: `1px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: C.muted,
+                  transition: 'color 0.2s ease, border-color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = C.accent
+                  e.currentTarget.style.borderColor = 'rgba(194,181,155,0.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = C.muted
+                  e.currentTarget.style.borderColor = C.border
+                }}
+              >
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="0.9" fill="currentColor" />
+                </svg>
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="LinkedIn"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 9,
+                  border: `1px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: C.muted,
+                  transition: 'color 0.2s ease, border-color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = C.accent
+                  e.currentTarget.style.borderColor = 'rgba(194,181,155,0.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = C.muted
+                  e.currentTarget.style.borderColor = C.border
+                }}
+              >
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.4c0-1.3 0-2.95-1.8-2.95s-2.08 1.4-2.08 2.85V21h-4z" />
+                </svg>
+              </a>
+            </div>
           </div>
-          <p
-            style={{
-              fontSize: 14.5,
-              color: C.muted,
-              lineHeight: 1.6,
-              maxWidth: 300,
-            }}
-          >
-            Building the foundation behind scalable brands.
-          </p>
-        </div>
 
         <div>
           <div
@@ -1467,6 +2148,7 @@ function Footer() {
         }}
       >
         © 2026 Lithos Labs. All rights reserved.
+        </div>
       </div>
     </footer>
   )
@@ -1646,6 +2328,59 @@ function CookieNotice() {
 }
 
 /* ============================================================
+   SECTION DIVIDER — gradient fade
+   ============================================================ */
+function Divider() {
+  return (
+    <div
+      aria-hidden
+      style={{
+        height: 1,
+        width: '60%',
+        margin: '0 auto',
+        background:
+          'linear-gradient(90deg, transparent, rgba(194,181,155,0.15), transparent)',
+      }}
+    />
+  )
+}
+
+/* ============================================================
+   CURSOR GLOW — follows the mouse
+   ============================================================ */
+function CursorGlow() {
+  const [pos, setPos] = useState({ x: -400, y: -400 })
+
+  useEffect(() => {
+    if (window.matchMedia('(hover: none)').matches) return
+    const onMove = (e) => setPos({ x: e.clientX, y: e.clientY })
+    window.addEventListener('mousemove', onMove)
+    return () => window.removeEventListener('mousemove', onMove)
+  }, [])
+
+  return (
+    <div
+      aria-hidden
+      className="lithos-cursor-glow"
+      style={{
+        position: 'fixed',
+        left: pos.x,
+        top: pos.y,
+        width: 300,
+        height: 300,
+        borderRadius: '50%',
+        background:
+          'radial-gradient(circle, rgba(194,181,155,0.06) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        zIndex: 9999,
+        transform: 'translate(-50%, -50%)',
+        transition: 'left 0.1s, top 0.1s',
+      }}
+    />
+  )
+}
+
+/* ============================================================
    APP
    ============================================================ */
 export default function App() {
@@ -1653,11 +2388,11 @@ export default function App() {
     <div style={{ background: C.bg, color: C.text, fontFamily: FONT }}>
       <style>{`
         .lithos-hero-grid {
-          animation: lithosGridDrift 20s linear infinite;
+          animation: lithosGridDrift 25s linear infinite;
         }
         @keyframes lithosGridDrift {
           from { background-position: 0px 0px; }
-          to { background-position: 40px 40px; }
+          to { background-position: 32px 32px; }
         }
         .lithos-whatsapp .lithos-wa-tip {
           position: absolute;
@@ -1680,7 +2415,25 @@ export default function App() {
         }
         select option { color: ${C.text}; }
         section[id] { scroll-margin-top: 86px; }
+        .lithos-cta-watermark { font-size: clamp(70px, 22vw, 200px); }
+        .lithos-footer-line {
+          background: linear-gradient(90deg, transparent, rgba(194,181,155,0.45), transparent);
+          background-size: 50% 100%;
+          background-repeat: no-repeat;
+          animation: lithosFooterLine 6s linear infinite;
+        }
+        @keyframes lithosFooterLine {
+          0% { background-position: -50% 0; }
+          100% { background-position: 150% 0; }
+        }
+        @media (hover: none), (pointer: coarse) {
+          .lithos-cursor-glow { display: none !important; }
+        }
+        @media (max-width: 1024px) {
+          .lithos-showcase-grid { column-count: 2 !important; }
+        }
         @media (max-width: 860px) {
+          .lithos-showcase-grid { column-count: 1 !important; }
           .lithos-desktop-nav { display: none !important; }
           .lithos-hamburger { display: flex !important; }
           .lithos-services-grid { grid-template-columns: 1fr !important; }
@@ -1695,13 +2448,20 @@ export default function App() {
         }
       `}</style>
       <LoadingScreen />
+      <CursorGlow />
       <Nav />
       <main>
         <Hero />
         <Services />
+        <Divider />
+        <Showcase />
+        <Divider />
         <HowItWorks />
+        <Divider />
         <WhyLithos />
+        <Divider />
         <Stats />
+        <Divider />
         <CTA />
       </main>
       <Footer />
