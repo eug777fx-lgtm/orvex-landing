@@ -267,32 +267,29 @@ function Nav() {
               src="/lithos-logo.png"
               alt="Lithos Labs"
               loading="lazy"
-              style={{ width: 28, height: 28, objectFit: 'contain' }}
+              style={{ width: 26, height: 26, objectFit: 'contain' }}
+              onError={(e) => (e.target.style.display = 'none')}
             />
-            <div
-              style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: 16,
+                color: '#F5F5F2',
+                letterSpacing: '-0.4px',
+              }}
             >
-              <span
-                style={{
-                  fontWeight: 700,
-                  fontSize: 16,
-                  color: '#F5F5F2',
-                  letterSpacing: '-0.5px',
-                }}
-              >
-                Lithos
-              </span>
-              <span
-                style={{
-                  fontWeight: 300,
-                  fontSize: 16,
-                  color: 'rgba(194,181,155,0.6)',
-                  letterSpacing: '-0.5px',
-                }}
-              >
-                Labs
-              </span>
-            </div>
+              Lithos
+            </span>
+            <span
+              style={{
+                fontWeight: 300,
+                fontSize: 16,
+                color: 'rgba(194,181,155,0.6)',
+                letterSpacing: '-0.4px',
+              }}
+            >
+              Labs
+            </span>
           </div>
         </a>
 
@@ -953,6 +950,231 @@ function Services() {
 }
 
 /* ============================================================
+   PRICING
+   ============================================================ */
+function CheckIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={C.accent}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ flexShrink: 0, marginTop: 3 }}
+      aria-hidden
+    >
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  )
+}
+
+const PLANS = [
+  {
+    name: 'Starter',
+    price: 'From $500',
+    best: 'Small businesses getting started',
+    features: [
+      'CRM Setup',
+      'Lead tracking pipeline',
+      'Basic automations',
+      '30-day support',
+    ],
+    cta: 'Get Started',
+    popular: false,
+  },
+  {
+    name: 'Growth',
+    price: 'From $1,500',
+    best: 'Growing businesses ready to scale',
+    features: [
+      'Everything in Starter',
+      'AI Marketing System',
+      'Content generation',
+      'Social media automation',
+      'Monthly strategy call',
+    ],
+    cta: 'Get Started',
+    popular: true,
+  },
+  {
+    name: 'Full System',
+    price: 'From $3,000',
+    best: 'Businesses ready for full transformation',
+    features: [
+      'Everything in Growth',
+      'Custom website',
+      'Lead generation system',
+      'Brand identity',
+      'Dedicated account manager',
+      'Bi-weekly strategy calls',
+    ],
+    cta: 'Book a Call',
+    popular: false,
+  },
+]
+
+function Pricing() {
+  const scrollToContact = () =>
+    document
+      .getElementById('contact-form-anchor')
+      ?.scrollIntoView({ behavior: 'smooth' })
+
+  return (
+    <section
+      id="pricing"
+      className="lithos-section"
+      style={{ padding: `${PAD}px 28px` }}
+    >
+      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+        <Reveal>
+          <SectionHeader
+            kicker="Pricing"
+            title="Simple, Transparent Pricing"
+            sub="Choose the package that fits your business"
+          />
+        </Reveal>
+        <div
+          className="lithos-pricing-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 20,
+            marginTop: 60,
+            alignItems: 'stretch',
+          }}
+        >
+          {PLANS.map((p, i) => (
+            <Reveal key={p.name} delay={i * 0.1} style={{ height: '100%' }}>
+              <div
+                style={{
+                  position: 'relative',
+                  background: p.popular
+                    ? 'rgba(194,181,155,0.03)'
+                    : '#111113',
+                  border: p.popular
+                    ? '0.5px solid rgba(194,181,155,0.4)'
+                    : '0.5px solid rgba(255,255,255,0.06)',
+                  borderRadius: 16,
+                  padding: 32,
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                {p.popular && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: -12,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: C.accent,
+                      color: C.bg,
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                      padding: '5px 14px',
+                      borderRadius: 999,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Most Popular
+                  </div>
+                )}
+                <h3
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 650,
+                    color: C.text,
+                    letterSpacing: '-0.02em',
+                    marginBottom: 10,
+                  }}
+                >
+                  {p.name}
+                </h3>
+                <div
+                  style={{
+                    fontSize: 36,
+                    fontWeight: 700,
+                    color: C.accent,
+                    letterSpacing: '-0.03em',
+                    marginBottom: 6,
+                  }}
+                >
+                  {p.price}
+                </div>
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: C.muted,
+                    lineHeight: 1.5,
+                    marginBottom: 26,
+                  }}
+                >
+                  {p.best}
+                </p>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 13,
+                    marginBottom: 30,
+                    flex: 1,
+                  }}
+                >
+                  {p.features.map((f) => (
+                    <div
+                      key={f}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 11,
+                      }}
+                    >
+                      <CheckIcon />
+                      <span
+                        style={{
+                          fontSize: 14.5,
+                          color: C.text,
+                          opacity: 0.82,
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {f}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <PressButton
+                  onClick={scrollToContact}
+                  style={{
+                    width: '100%',
+                    background: p.popular ? C.accent : 'transparent',
+                    color: p.popular ? C.bg : C.accent,
+                    border: p.popular ? 'none' : `1px solid ${C.accent}`,
+                    fontSize: 15,
+                    fontWeight: 600,
+                    padding: '14px 0',
+                    borderRadius: 11,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {p.cta}
+                </PressButton>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ============================================================
    HOW IT WORKS — The Lithos Framework
    ============================================================ */
 const STEPS = [
@@ -1249,6 +1471,119 @@ function Stats() {
 }
 
 /* ============================================================
+   TESTIMONIALS — Social proof
+   ============================================================ */
+const TESTIMONIALS = [
+  {
+    quote:
+      'Lithos Labs built our entire CRM system in less than a week. Our lead response time dropped from 3 days to 2 hours.',
+    name: 'Local Business Owner, Aruba',
+    result: '3x faster lead response',
+  },
+  {
+    quote:
+      'The AI marketing system generates content for us daily. We went from posting once a week to daily without extra effort.',
+    name: 'Service Business, Aruba',
+    result: '7x more content output',
+  },
+  {
+    quote:
+      'Our booking system and automated follow-ups now run while we sleep. Best investment we made this year.',
+    name: 'Restaurant Owner, Aruba',
+    result: '40% more bookings',
+  },
+]
+
+function Testimonials() {
+  return (
+    <section
+      id="testimonials"
+      className="lithos-section"
+      style={{ padding: `${PAD}px 28px` }}
+    >
+      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+        <Reveal>
+          <SectionHeader
+            kicker="Social Proof"
+            title="Built for Businesses Like Yours"
+            sub={null}
+          />
+        </Reveal>
+        <div
+          className="lithos-testimonials-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 20,
+            marginTop: 60,
+            alignItems: 'stretch',
+          }}
+        >
+          {TESTIMONIALS.map((t, i) => (
+            <Reveal key={t.name} delay={i * 0.1} style={{ height: '100%' }}>
+              <div
+                style={{
+                  background: C.card,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 16,
+                  padding: 32,
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <svg
+                  width="26"
+                  height="26"
+                  viewBox="0 0 24 24"
+                  fill={C.accent}
+                  style={{ opacity: 0.5, marginBottom: 18 }}
+                  aria-hidden
+                >
+                  <path d="M9.5 7C6.46 7 4 9.46 4 12.5V18h6v-6H7c0-1.66 1.34-3 3-3h.5V7zm9 0c-3.04 0-5.5 2.46-5.5 5.5V18h6v-6h-3c0-1.66 1.34-3 3-3h.5V7z" />
+                </svg>
+                <p
+                  style={{
+                    fontSize: 16,
+                    fontStyle: 'italic',
+                    color: C.text,
+                    lineHeight: 1.6,
+                    flex: 1,
+                    marginBottom: 24,
+                  }}
+                >
+                  “{t.quote}”
+                </p>
+                <div
+                  style={{
+                    borderTop: `1px solid ${C.border}`,
+                    paddingTop: 18,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: C.accent,
+                      marginBottom: 5,
+                    }}
+                  >
+                    {t.name}
+                  </div>
+                  <div style={{ fontSize: 13, color: C.muted }}>
+                    {t.result}
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ============================================================
    CTA + CONTACT FORM
    ============================================================ */
 const SERVICE_OPTIONS = [
@@ -1263,6 +1598,16 @@ function ContactForm() {
   const [sent, setSent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [formData, setFormData] = useState({
+    name: '',
+    business_name: '',
+    email: '',
+    service_needed: '',
+    message: '',
+  })
+
+  const update = (key) => (e) =>
+    setFormData((prev) => ({ ...prev, [key]: e.target.value }))
 
   const inputStyle = {
     width: '100%',
@@ -1280,27 +1625,24 @@ function ContactForm() {
     e.preventDefault()
     setSubmitting(true)
     setError('')
-    const form = e.currentTarget
-    const data = new FormData(form)
     try {
-      const res = await fetch('https://formspree.io/f/REPLACE_WITH_YOUR_ID', {
+      const res = await fetch('https://formspree.io/f/xqapwgqo', {
         method: 'POST',
-        body: data,
-        headers: { Accept: 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(formData),
       })
       if (res.ok) {
         setSent(true)
-        form.reset()
       } else {
-        setError(
-          'Something went wrong. Please try again or email us directly.'
-        )
+        setError('Something went wrong — email us at hello@lithoslabs.com')
       }
     } catch {
-      setError('Network error. Please try again or email us directly.')
-    } finally {
-      setSubmitting(false)
+      setError('Something went wrong')
     }
+    setSubmitting(false)
   }
 
   if (sent) {
@@ -1385,6 +1727,8 @@ function ContactForm() {
           placeholder="Your name"
           required
           autoComplete="name"
+          value={formData.name}
+          onChange={update('name')}
         />
         <input
           style={inputStyle}
@@ -1392,6 +1736,8 @@ function ContactForm() {
           placeholder="Business name"
           required
           autoComplete="organization"
+          value={formData.business_name}
+          onChange={update('business_name')}
         />
       </div>
       <input
@@ -1401,11 +1747,14 @@ function ContactForm() {
         placeholder="Email address"
         required
         autoComplete="email"
+        value={formData.email}
+        onChange={update('email')}
       />
       <select
         style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
         name="service_needed"
-        defaultValue=""
+        value={formData.service_needed}
+        onChange={update('service_needed')}
         required
       >
         <option value="" disabled style={{ background: C.bg }}>
@@ -1422,6 +1771,8 @@ function ContactForm() {
         name="message"
         placeholder="Tell us about your biggest bottleneck"
         rows={4}
+        value={formData.message}
+        onChange={update('message')}
       />
       {error && <p style={{ fontSize: 13.5, color: '#e0a0a0' }}>{error}</p>}
       <PressButton
@@ -1574,6 +1925,8 @@ function Footer() {
       />
       <div
         style={{
+          position: 'relative',
+          zIndex: 1,
           padding: '70px 28px 50px',
           maxWidth: MAXW,
           margin: '0 auto',
@@ -1602,30 +1955,29 @@ function Footer() {
                 src="/lithos-logo.png"
                 alt="Lithos Labs"
                 loading="lazy"
-                style={{ width: 30, height: 30, objectFit: 'contain' }}
+                style={{ width: 26, height: 26, objectFit: 'contain' }}
+                onError={(e) => (e.target.style.display = 'none')}
               />
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 18,
-                    color: '#F5F5F2',
-                    letterSpacing: '-0.5px',
-                  }}
-                >
-                  Lithos
-                </span>
-                <span
-                  style={{
-                    fontWeight: 300,
-                    fontSize: 18,
-                    color: 'rgba(194,181,155,0.6)',
-                    letterSpacing: '-0.5px',
-                  }}
-                >
-                  Labs
-                </span>
-              </div>
+              <span
+                style={{
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: '#F5F5F2',
+                  letterSpacing: '-0.4px',
+                }}
+              >
+                Lithos
+              </span>
+              <span
+                style={{
+                  fontWeight: 300,
+                  fontSize: 16,
+                  color: 'rgba(194,181,155,0.6)',
+                  letterSpacing: '-0.4px',
+                }}
+              >
+                Labs
+              </span>
             </div>
             <p
               style={{
@@ -1798,7 +2150,7 @@ function Footer() {
 function WhatsApp() {
   return (
     <motion.a
-      href="https://wa.me/297XXXXXXX"
+      href="https://wa.me/2975215000"
       target="_blank"
       rel="noreferrer"
       aria-label="Chat on WhatsApp"
@@ -2072,6 +2424,8 @@ export default function App() {
           .lithos-desktop-nav { display: none !important; }
           .lithos-hamburger { display: flex !important; }
           .lithos-services-grid { grid-template-columns: 1fr !important; }
+          .lithos-pricing-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .lithos-testimonials-grid { grid-template-columns: 1fr !important; }
           .lithos-why-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
           .lithos-steps { grid-template-columns: 1fr !important; gap: 40px !important; }
           .lithos-steps-line { display: none !important; }
@@ -2089,11 +2443,15 @@ export default function App() {
         <Hero />
         <Services />
         <Divider />
+        <Pricing />
+        <Divider />
         <HowItWorks />
         <Divider />
         <WhyLithos />
         <Divider />
         <Stats />
+        <Divider />
+        <Testimonials />
         <Divider />
         <CTA />
       </main>
