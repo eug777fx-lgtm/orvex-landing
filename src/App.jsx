@@ -21,12 +21,12 @@ function useIsMobile(breakpoint = 860) {
    LITHOS LABS — DESIGN SYSTEM
    ============================================================ */
 const C = {
-  bg: '#0B0B0D',
-  accent: '#C2B59B',
-  text: '#F5F5F2',
-  muted: 'rgba(242,237,228,0.45)',
-  border: 'rgba(194,181,155,0.1)',
-  card: 'rgba(194,181,155,0.03)',
+  bg: '#000000',
+  accent: '#FFFFFF',
+  text: '#FFFFFF',
+  muted: 'rgba(255,255,255,0.55)',
+  border: '#2A2A2A',
+  card: '#111111',
 }
 
 const FONT =
@@ -120,7 +120,7 @@ function CountUp({ value }) {
 }
 
 /* ============================================================
-   ICONS — minimal line glyphs (beige)
+   ICONS — minimal line glyphs (white)
    ============================================================ */
 function Icon({ name }) {
   const common = {
@@ -149,10 +149,13 @@ function Icon({ name }) {
           <circle cx="12" cy="2.5" r="0.6" fill={C.accent} />
         </svg>
       )
-    case 'brand':
+    case 'web':
       return (
         <svg {...common}>
-          <path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z" />
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18" />
+          <path d="M12 3a14 14 0 010 18" />
+          <path d="M12 3a14 14 0 000 18" />
         </svg>
       )
     case 'growth':
@@ -246,7 +249,7 @@ function Nav() {
         zIndex: 100,
         backdropFilter: 'blur(18px)',
         WebkitBackdropFilter: 'blur(18px)',
-        background: 'rgba(11,11,13,0.65)',
+        background: 'rgba(0, 0, 0,0.65)',
         borderBottom: `1px solid ${C.border}`,
       }}
     >
@@ -274,7 +277,7 @@ function Nav() {
               style={{
                 fontWeight: 700,
                 fontSize: 16,
-                color: '#F5F5F2',
+                color: '#FFFFFF',
                 letterSpacing: '-0.4px',
               }}
             >
@@ -284,7 +287,7 @@ function Nav() {
               style={{
                 fontWeight: 300,
                 fontSize: 16,
-                color: 'rgba(194,181,155,0.6)',
+                color: 'rgba(255, 255, 255,0.6)',
                 letterSpacing: '-0.4px',
               }}
             >
@@ -389,7 +392,7 @@ function Nav() {
             style={{
               overflow: 'hidden',
               borderBottom: `1px solid ${C.border}`,
-              background: 'rgba(11,11,13,0.95)',
+              background: 'rgba(0, 0, 0,0.95)',
             }}
           >
             <div
@@ -457,7 +460,7 @@ function Hero() {
         textAlign: 'center',
         padding: '120px 28px 80px',
         overflow: 'hidden',
-        background: '#0B0B0D',
+        background: '#000000',
       }}
     >
       {/* Layer 2 — radial glow, top center */}
@@ -469,7 +472,7 @@ function Hero() {
           pointerEvents: 'none',
           zIndex: 0,
           background:
-            'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(194,181,155,0.07) 0%, transparent 60%)',
+            'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 255, 255,0.07) 0%, transparent 60%)',
         }}
       />
       {/* Layer 3 — second glow, bottom left */}
@@ -480,7 +483,7 @@ function Hero() {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(ellipse 50% 40% at -10% 100%, rgba(194,181,155,0.04) 0%, transparent 50%)',
+            'radial-gradient(ellipse 50% 40% at -10% 100%, rgba(255, 255, 255,0.04) 0%, transparent 50%)',
         }}
       />
       {/* Layer 4 — animated dot grid */}
@@ -491,7 +494,7 @@ function Hero() {
           position: 'absolute',
           inset: 0,
           backgroundImage:
-            'radial-gradient(circle, rgba(194,181,155,0.15) 1px, transparent 1px)',
+            'radial-gradient(circle, rgba(255, 255, 255,0.15) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
           backgroundPosition: '0px 0px',
           maskImage:
@@ -626,8 +629,8 @@ function Hero() {
                 delay: i * 0.5,
               }}
               style={{
-                background: 'rgba(194,181,155,0.06)',
-                border: '0.5px solid rgba(194,181,155,0.15)',
+                background: 'rgba(255, 255, 255,0.06)',
+                border: '0.5px solid rgba(255, 255, 255,0.15)',
                 borderRadius: 12,
                 padding: '12px 20px',
                 backdropFilter: 'blur(12px)',
@@ -823,9 +826,9 @@ const SERVICES = [
     desc: 'Content generation, scheduling, brand-voice AI, and 24/7 automation that markets while you sleep.',
   },
   {
-    icon: 'brand',
-    title: 'Brand Identity',
-    desc: 'Logos, websites, visual systems, and brand strategy that make you look as serious as you are.',
+    icon: 'web',
+    title: 'Website Development',
+    desc: 'Professional websites built from scratch — landing pages, business websites, and premium custom builds. Fast delivery, mobile responsive, SEO ready.',
   },
   {
     icon: 'growth',
@@ -844,7 +847,7 @@ function ServiceCard({ s }) {
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       style={{
         background: C.card,
-        border: `1px solid ${hover ? 'rgba(194,181,155,0.25)' : C.border}`,
+        border: `1px solid ${hover ? 'rgba(255, 255, 255,0.25)' : C.border}`,
         borderRadius: 18,
         padding: '34px 32px',
         display: 'flex',
@@ -859,7 +862,7 @@ function ServiceCard({ s }) {
           width: 50,
           height: 50,
           borderRadius: 13,
-          background: 'rgba(194,181,155,0.08)',
+          background: 'rgba(255, 255, 255,0.08)',
           border: `1px solid ${C.border}`,
           display: 'flex',
           alignItems: 'center',
@@ -1052,10 +1055,10 @@ function Pricing() {
                 style={{
                   position: 'relative',
                   background: p.popular
-                    ? 'rgba(194,181,155,0.03)'
-                    : '#111113',
+                    ? 'rgba(255, 255, 255,0.03)'
+                    : '#111111',
                   border: p.popular
-                    ? '0.5px solid rgba(194,181,155,0.4)'
+                    ? '0.5px solid rgba(255, 255, 255,0.4)'
                     : '0.5px solid rgba(255,255,255,0.06)',
                   borderRadius: 16,
                   padding: 32,
@@ -1203,7 +1206,7 @@ function HowItWorks() {
     <section
       id="how-it-works"
       className="lithos-section"
-      style={{ padding: `${PAD}px 28px`, background: 'rgba(194,181,155,0.015)' }}
+      style={{ padding: `${PAD}px 28px`, background: 'rgba(255, 255, 255,0.015)' }}
     >
       <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
         <Reveal>
@@ -1418,7 +1421,7 @@ function Stats() {
           <div
             style={{
               background:
-                'linear-gradient(180deg, rgba(194,181,155,0.05), rgba(194,181,155,0.02))',
+                'linear-gradient(180deg, rgba(255, 255, 255,0.05), rgba(255, 255, 255,0.02))',
               border: `1px solid ${C.border}`,
               borderRadius: 22,
               padding: '64px 48px',
@@ -1589,7 +1592,7 @@ function Testimonials() {
 const SERVICE_OPTIONS = [
   'CRM Setup',
   'AI Marketing System',
-  'Brand Identity',
+  'Website Development',
   'Full Package',
   'Not sure',
 ]
@@ -1653,7 +1656,7 @@ function ContactForm() {
         transition={{ duration: 0.5 }}
         style={{
           background: C.card,
-          border: `1px solid rgba(194,181,155,0.25)`,
+          border: `1px solid rgba(255, 255, 255,0.25)`,
           borderRadius: 18,
           padding: '56px 40px',
           textAlign: 'center',
@@ -1666,7 +1669,7 @@ function ContactForm() {
             width: 56,
             height: 56,
             borderRadius: '50%',
-            background: 'rgba(194,181,155,0.12)',
+            background: 'rgba(255, 255, 255,0.12)',
             border: `1px solid ${C.accent}`,
             display: 'flex',
             alignItems: 'center',
@@ -1774,7 +1777,7 @@ function ContactForm() {
         value={formData.message}
         onChange={update('message')}
       />
-      {error && <p style={{ fontSize: 13.5, color: '#e0a0a0' }}>{error}</p>}
+      {error && <p style={{ fontSize: 13.5, color: '#FF4444' }}>{error}</p>}
       <PressButton
         type="submit"
         disabled={submitting}
@@ -1804,12 +1807,12 @@ function CTA() {
         position: 'relative',
         overflow: 'hidden',
         padding: `${PAD}px 28px`,
-        background: '#0B0B0D',
+        background: '#000000',
         borderTop: `1px solid ${C.border}`,
         borderBottom: `1px solid ${C.border}`,
       }}
     >
-      {/* Centered beige glow */}
+      {/* Centered white glow */}
       <div
         aria-hidden
         style={{
@@ -1817,7 +1820,7 @@ function CTA() {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(ellipse 60% 80% at 50% 50%, rgba(194,181,155,0.08) 0%, transparent 60%)',
+            'radial-gradient(ellipse 60% 80% at 50% 50%, rgba(255, 255, 255,0.08) 0%, transparent 60%)',
         }}
       />
       {/* Giant watermark */}
@@ -1830,7 +1833,7 @@ function CTA() {
           left: '50%',
           transform: 'translate(-50%, -50%)',
           fontWeight: 900,
-          color: 'rgba(194,181,155,0.04)',
+          color: 'rgba(255, 255, 255,0.04)',
           letterSpacing: '-10px',
           lineHeight: 1,
           whiteSpace: 'nowrap',
@@ -1962,7 +1965,7 @@ function Footer() {
                 style={{
                   fontWeight: 700,
                   fontSize: 16,
-                  color: '#F5F5F2',
+                  color: '#FFFFFF',
                   letterSpacing: '-0.4px',
                 }}
               >
@@ -1972,7 +1975,7 @@ function Footer() {
                 style={{
                   fontWeight: 300,
                   fontSize: 16,
-                  color: 'rgba(194,181,155,0.6)',
+                  color: 'rgba(255, 255, 255,0.6)',
                   letterSpacing: '-0.4px',
                 }}
               >
@@ -2009,7 +2012,7 @@ function Footer() {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = C.accent
-                  e.currentTarget.style.borderColor = 'rgba(194,181,155,0.4)'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255,0.4)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.color = C.muted
@@ -2049,7 +2052,7 @@ function Footer() {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = C.accent
-                  e.currentTarget.style.borderColor = 'rgba(194,181,155,0.4)'
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255,0.4)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.color = C.muted
@@ -2287,7 +2290,7 @@ function CookieNotice() {
             gap: 16,
             padding: '14px 18px',
             borderRadius: 12,
-            background: 'rgba(20,20,22,0.92)',
+            background: 'rgba(20, 20, 20,0.92)',
             backdropFilter: 'blur(14px)',
             WebkitBackdropFilter: 'blur(14px)',
             border: `1px solid ${C.border}`,
@@ -2330,7 +2333,7 @@ function Divider() {
         width: '60%',
         margin: '0 auto',
         background:
-          'linear-gradient(90deg, transparent, rgba(194,181,155,0.15), transparent)',
+          'linear-gradient(90deg, transparent, rgba(255, 255, 255,0.15), transparent)',
       }}
     />
   )
@@ -2361,7 +2364,7 @@ function CursorGlow() {
         height: 300,
         borderRadius: '50%',
         background:
-          'radial-gradient(circle, rgba(194,181,155,0.06) 0%, transparent 70%)',
+          'radial-gradient(circle, rgba(255, 255, 255,0.06) 0%, transparent 70%)',
         pointerEvents: 'none',
         zIndex: 9999,
         transform: 'translate(-50%, -50%)',
@@ -2408,7 +2411,7 @@ export default function App() {
         section[id] { scroll-margin-top: 86px; }
         .lithos-cta-watermark { font-size: clamp(80px, 15vw, 180px); }
         .lithos-footer-line {
-          background: linear-gradient(90deg, transparent, rgba(194,181,155,0.45), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255,0.45), transparent);
           background-size: 50% 100%;
           background-repeat: no-repeat;
           animation: lithosFooterLine 6s linear infinite;

@@ -1,18 +1,22 @@
+:root {
+  --bg-primary: #000000;
+  --bg-secondary: #0A0A0A;
+  --bg-card: #111111;
+  --bg-elevated: #1A1A1A;
+  --bg-hover: #222222;
+  --border: #2A2A2A;
+  --border-light: #1A1A1A;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+  --text-muted: #666666;
+  --accent: #FFFFFF;
+  --error: #FF4444;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
-
-:root {
-  --bg: #0c0c0e;
-  --bg-alt: #111114;
-  --card: rgba(17, 17, 20, 0.8);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-bright: rgba(255, 255, 255, 0.18);
-  --text: #ffffff;
-  --muted: rgba(255, 255, 255, 0.45);
-  --faint: rgba(255, 255, 255, 0.25);
 }
 
 html {
@@ -23,12 +27,9 @@ html,
 body {
   margin: 0;
   padding: 0;
-}
-
-body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  background: #000000;
+  color: #FFFFFF;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -43,11 +44,7 @@ body {
   position: relative;
 }
 
-h1,
-h2,
-h3,
-h4,
-p {
+h1, h2, h3, h4, p {
   margin: 0;
 }
 
@@ -72,16 +69,14 @@ textarea {
   font-family: inherit;
 }
 
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0A0A0A; }
+::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #333333; }
+
+::selection {
+  background: #FFFFFF;
+  color: #000000;
 }
 
 @keyframes orbFloat1 {
@@ -111,9 +106,7 @@ textarea {
 }
 
 @media (max-width: 768px) {
-  .cos-section {
-    padding: 60px 0 !important;
-  }
+  .cos-section { padding: 60px 0 !important; }
 }
 
 @keyframes marqueeScroll {
@@ -122,16 +115,16 @@ textarea {
 }
 
 @keyframes whatsappPulse {
-  0% { box-shadow: 0 0 0 0 rgba(37,211,102,0.45); }
-  100% { box-shadow: 0 0 0 18px rgba(37,211,102,0); }
+  0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.45); }
+  100% { box-shadow: 0 0 0 18px rgba(37, 211, 102, 0); }
 }
 
 .cos-grid-bg {
-  background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: 40px 40px;
   background-position: center;
-  mask-image: radial-gradient(ellipse 80% 50% at 50% 40%, rgba(0,0,0,0.8), transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 40%, rgba(0,0,0,0.8), transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 50% at 50% 40%, rgba(0, 0, 0, 0.8), transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 40%, rgba(0, 0, 0, 0.8), transparent 75%);
 }
 
 .cos-marquee-track {
@@ -147,7 +140,5 @@ html.cos-cursor-none * {
 }
 
 @media (hover: none), (pointer: coarse) {
-  .cos-custom-cursor {
-    display: none !important;
-  }
+  .cos-custom-cursor { display: none !important; }
 }
