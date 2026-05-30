@@ -317,7 +317,11 @@ function Nav() {
               {l.label}
             </a>
           ))}
-          <a href="#contact">
+          <a
+            href="https://calendly.com/lithoslabs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <PressButton
               style={{
                 background: C.accent,
@@ -418,7 +422,12 @@ function Nav() {
                   {l.label}
                 </a>
               ))}
-              <a href="#contact" onClick={() => setOpen(false)}>
+              <a
+                href="https://calendly.com/lithoslabs"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+              >
                 <PressButton
                   style={{
                     marginTop: 14,
@@ -687,7 +696,11 @@ function Hero() {
             flexWrap: 'wrap',
           }}
         >
-          <a href="#contact">
+          <a
+            href="https://calendly.com/lithoslabs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <PressButton
               style={{
                 background: C.accent,
@@ -2153,7 +2166,7 @@ function Footer() {
 function WhatsApp() {
   return (
     <motion.a
-      href="https://wa.me/2975215000"
+      href="https://wa.me/2977491888"
       target="_blank"
       rel="noreferrer"
       aria-label="Chat on WhatsApp"
