@@ -1273,6 +1273,7 @@ const PLANS = [
     name: 'Landing Page',
     price: 'Afl. 1,500',
     per: 'one-time',
+    support: '+ Afl. 150/month support plan after launch',
     best: 'A professional website that converts visitors into customers',
     features: [
       'Custom 4–5 page website',
@@ -1288,6 +1289,7 @@ const PLANS = [
     name: 'Landing Page + CRM',
     price: 'Afl. 3,500',
     per: 'one-time',
+    support: '+ Afl. 150/month support plan after launch',
     best: 'Your website plus the system that runs your business',
     features: [
       'Everything in Landing Page',
@@ -1432,6 +1434,23 @@ function PricingCard({ p, onCta }) {
           {p.per}
         </span>
       </div>
+      {p.support && (
+        <div
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: dark ? 'rgba(0,0,0,0.55)' : C.muted,
+            border: `1px solid ${dark ? 'rgba(0,0,0,0.15)' : C.border}`,
+            borderRadius: 999,
+            padding: '5px 12px',
+            display: 'inline-block',
+            alignSelf: 'flex-start',
+            marginBottom: 12,
+          }}
+        >
+          {p.support}
+        </div>
+      )}
       <p
         style={{
           fontSize: 14,
