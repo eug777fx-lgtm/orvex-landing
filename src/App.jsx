@@ -2712,14 +2712,21 @@ function WhatsApp() {
 }
 
 /* ============================================================
-   LOADING SCREEN
+   LOADING SCREEN — cinematic intro
+   Stone draws in → spins up to a blur → collapses into a point
+   → white shockwave → site snaps in
    ============================================================ */
-function LoadingScreen() {
+function LoadingScreen({ onReveal }) {
   const [show, setShow] = useState(true)
 
   useEffect(() => {
-    const t = setTimeout(() => setShow(false), 1400)
-    return () => clearTimeout(t)
+    const reveal = setTimeout(() => onReveal && onReveal(), 1850)
+    const kill = setTimeout(() => setShow(false), 2150)
+    return () => {
+      clearTimeout(reveal)
+      clearTimeout(kill)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -2728,7 +2735,7 @@ function LoadingScreen() {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -2738,18 +2745,27 @@ function LoadingScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 22,
+            gap: 26,
+            overflow: 'hidden',
           }}
         >
+          {/* Spinning stone — draw, spin up violently, collapse */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.88 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            animate={{
+              rotate: [0, 40, 360, 2520],
+              scale: [0.85, 1, 1.12, 0.01],
+              opacity: [1, 1, 1, 0],
+            }}
+            transition={{
+              duration: 1.85,
+              times: [0, 0.3, 0.62, 1],
+              ease: ['easeOut', 'easeInOut', 'easeIn'],
+            }}
+            style={{ display: 'flex' }}
           >
-            {/* Organic stone shape */}
             <svg
-              width="76"
-              height="76"
+              width="86"
+              height="86"
               viewBox="0 0 100 100"
               fill="none"
               stroke={C.accent}
@@ -2761,21 +2777,97 @@ function LoadingScreen() {
                 d="M28 22 C42 12, 66 14, 78 30 C88 44, 86 66, 70 78 C54 90, 30 86, 19 70 C9 55, 14 32, 28 22 Z"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 1, ease: 'easeInOut' }}
+                transition={{ duration: 0.65, ease: 'easeInOut' }}
               />
             </svg>
           </motion.div>
+
+          {/* Spin ghost ring — motion blur illusion while spinning fast */}
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0, 0.5, 0], scale: [1, 1, 1.25, 0.01] }}
+            transition={{ duration: 1.85, times: [0, 0.55, 0.8, 1], ease: 'easeIn' }}
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: 110,
+              height: 110,
+              marginTop: -68,
+              marginLeft: -55,
+              borderRadius: '50%',
+              border: '2.5px solid rgba(255,255,255,0.5)',
+              borderTopColor: 'transparent',
+              borderBottomColor: 'transparent',
+              filter: 'blur(2px)',
+            }}
+          />
+
+          {/* Shockwave ring — fires as the stone collapses */}
+          <motion.div
+            aria-hidden
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: [0, 0, 26], opacity: [0, 0.9, 0] }}
+            transition={{ duration: 2.05, times: [0, 0.87, 1], ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: 120,
+              height: 120,
+              marginTop: -73,
+              marginLeft: -60,
+              borderRadius: '50%',
+              border: '2px solid #FFFFFF',
+              boxShadow: '0 0 60px rgba(255,255,255,0.5), inset 0 0 40px rgba(255,255,255,0.25)',
+            }}
+          />
+
+          {/* Second, thinner shockwave slightly behind */}
+          <motion.div
+            aria-hidden
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: [0, 0, 18], opacity: [0, 0.5, 0] }}
+            transition={{ duration: 2.15, times: [0, 0.9, 1], ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: 120,
+              height: 120,
+              marginTop: -73,
+              marginLeft: -60,
+              borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.8)',
+            }}
+          />
+
+          {/* White flash at the moment of collapse */}
+          <motion.div
+            aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0, 0.85, 0] }}
+            transition={{ duration: 2.05, times: [0, 0.86, 0.9, 1], ease: 'easeOut' }}
+            style={{ position: 'absolute', inset: 0, background: '#FFFFFF' }}
+          />
+
+          {/* Wordmark — letterspacing stretches, then gets sucked away */}
+          <motion.div
+            initial={{ opacity: 0, letterSpacing: '0.2em' }}
+            animate={{
+              opacity: [0, 1, 1, 0],
+              letterSpacing: ['0.2em', '0.4em', '0.55em', '1.2em'],
+              scale: [1, 1, 1, 0.6],
+            }}
+            transition={{ duration: 1.85, times: [0, 0.25, 0.62, 1], ease: 'easeIn' }}
             style={{
               fontSize: 13,
-              letterSpacing: '0.4em',
               textTransform: 'uppercase',
               color: C.muted,
               fontWeight: 600,
               paddingLeft: '0.4em',
+              whiteSpace: 'nowrap',
             }}
           >
             Lithos Labs
@@ -2903,6 +2995,8 @@ function CursorGlow() {
    APP
    ============================================================ */
 export default function App() {
+  const [revealed, setRevealed] = useState(false)
+
   return (
     <div style={{ background: C.bg, color: C.text, fontFamily: FONT, position: 'relative' }}>
       <style>{`
@@ -2990,22 +3084,39 @@ export default function App() {
 
       <ParticleNetwork />
       <ScrollProgress />
-      <LoadingScreen />
+      <LoadingScreen onReveal={() => setRevealed(true)} />
       <CursorGlow />
-      <Nav />
-      <main style={{ position: 'relative', zIndex: 1 }}>
-        <Hero />
-        <Marquee />
-        <Services />
-        <Pricing />
-        <HowItWorks />
-        <WhyLithos />
-        <OurWork />
-        <Stats />
-        <Testimonials />
-        <CTA />
-      </main>
-      <Footer />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: revealed ? 1 : 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        <Nav />
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, scale: 1.06, filter: 'blur(14px)' }}
+        animate={
+          revealed
+            ? { opacity: 1, scale: 1, filter: 'blur(0px)' }
+            : { opacity: 0, scale: 1.06, filter: 'blur(14px)' }
+        }
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        style={{ transformOrigin: '50% 20%' }}
+      >
+        <main style={{ position: 'relative', zIndex: 1 }}>
+          <Hero />
+          <Marquee />
+          <Services />
+          <Pricing />
+          <HowItWorks />
+          <WhyLithos />
+          <OurWork />
+          <Stats />
+          <Testimonials />
+          <CTA />
+        </main>
+        <Footer />
+      </motion.div>
       <WhatsApp />
       <CookieNotice />
     </div>
