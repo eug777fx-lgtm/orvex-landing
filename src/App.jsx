@@ -601,6 +601,9 @@ function Nav() {
 /* ============================================================
    HERO
    ============================================================ */
+const HERO_VIDEO =
+  'https://d8j0ntlcm91z4.cloudfront.net/user_3Dcp6zrGATlFYi9kI5hXvlA6IWT/hf_20260815_053847_5cf31016-3f91-403c-b8ed-adc0c6345530.mp4'
+
 function Hero() {
   const isMobile = useIsMobile()
 
@@ -638,6 +641,38 @@ function Hero() {
         overflow: 'hidden',
       }}
     >
+      {/* Cinematic obsidian stone video backdrop */}
+      <video
+        aria-hidden
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        src={HERO_VIDEO}
+        onError={(e) => (e.currentTarget.style.display = 'none')}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: 0.55,
+          filter: 'grayscale(1) brightness(1.15)',
+          pointerEvents: 'none',
+        }}
+      />
+      {/* Dark veil so the headline stays readable over the video */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          background:
+            'radial-gradient(ellipse 70% 70% at 50% 45%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.82) 100%)',
+        }}
+      />
       {/* Radial glow, top center */}
       <div
         aria-hidden
