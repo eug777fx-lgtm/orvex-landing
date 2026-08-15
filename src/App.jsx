@@ -2577,86 +2577,6 @@ function Footer() {
             >
               Building the foundation behind scalable brands.
             </p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Instagram"
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 10,
-                  border: `1px solid ${C.border}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: C.muted,
-                  transition: 'all 0.25s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#000'
-                  e.currentTarget.style.background = '#FFF'
-                  e.currentTarget.style.borderColor = '#FFF'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = C.muted
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.borderColor = C.border
-                }}
-              >
-                <svg
-                  width="17"
-                  height="17"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="5" />
-                  <circle cx="12" cy="12" r="4" />
-                  <circle cx="17.5" cy="6.5" r="0.9" fill="currentColor" />
-                </svg>
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="LinkedIn"
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 10,
-                  border: `1px solid ${C.border}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: C.muted,
-                  transition: 'all 0.25s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#000'
-                  e.currentTarget.style.background = '#FFF'
-                  e.currentTarget.style.borderColor = '#FFF'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = C.muted
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.borderColor = C.border
-                }}
-              >
-                <svg
-                  width="17"
-                  height="17"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM10 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.4c0-1.3 0-2.95-1.8-2.95s-2.08 1.4-2.08 2.85V21h-4z" />
-                </svg>
-              </a>
-            </div>
           </div>
 
           <div>
@@ -2708,16 +2628,6 @@ function Footer() {
                 onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
               >
                 eug777fx@gmail.com
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: 14.5, color: C.muted, transition: 'color 0.2s ease' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
-              >
-                Instagram
               </a>
               <span style={{ fontSize: 14.5, color: C.muted }}>Aruba</span>
             </div>
