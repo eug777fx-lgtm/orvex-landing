@@ -912,9 +912,9 @@ function Hero() {
    BRAND MARQUEE — rolling banner of client logos
    ============================================================ */
 const BRANDS = [
-  { name: 'Island Fades', src: '/clients/island-fades.png', h: 58 },
-  { name: 'AWATEC', src: '/clients/awatec.png', h: 30 },
-  { name: 'LIMITLESS', src: '/clients/limitless.png', h: 52 },
+  { name: 'Island Fades', src: '/clients/island-fades.png', h: 72 },
+  { name: 'AWATEC', src: '/clients/awatec.png', h: 38 },
+  { name: 'LIMITLESS', src: '/clients/limitless.png', h: 65 },
 ]
 
 function Marquee() {
