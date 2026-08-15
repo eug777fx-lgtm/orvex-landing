@@ -1049,7 +1049,7 @@ function Marquee() {
           fontWeight: 650,
         }}
       >
-        Brands we&rsquo;ve worked with
+        Businesses we&rsquo;ve built
       </div>
       <div
         aria-hidden
