@@ -602,7 +602,7 @@ function Nav() {
    HERO
    ============================================================ */
 const HERO_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_3Dcp6zrGATlFYi9kI5hXvlA6IWT/hf_20260815_053847_5cf31016-3f91-403c-b8ed-adc0c6345530.mp4'
+  'https://d2ol7oe51mr4n9.cloudfront.net/user_3Dcp6zrGATlFYi9kI5hXvlA6IWT/f1298398-bb04-45b1-b5e9-384d28fe6725.mp4'
 
 function Hero() {
   const isMobile = useIsMobile()
