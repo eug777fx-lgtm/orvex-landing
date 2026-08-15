@@ -363,44 +363,6 @@ function Icon({ name, size = 22 }) {
   }
 }
 
-function MetricIcon({ name }) {
-  const common = {
-    width: 18,
-    height: 18,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.7,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
-    'aria-hidden': true,
-  }
-  switch (name) {
-    case 'ai':
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-        </svg>
-      )
-    case 'speed':
-      return (
-        <svg {...common}>
-          <path d="M13 2L4.5 13.5H11l-1 8.5L18.5 10H12l1-8z" />
-        </svg>
-      )
-    case 'growth':
-      return (
-        <svg {...common}>
-          <path d="M3 17l6-6 4 4 8-8" />
-          <path d="M15 7h6v6" />
-        </svg>
-      )
-    default:
-      return null
-  }
-}
-
 /* ============================================================
    NAV
    ============================================================ */
@@ -856,80 +818,6 @@ function Hero() {
               See Our Work
             </PressButton>
           </a>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.85 }}
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 14,
-            justifyContent: 'center',
-          }}
-        >
-          {[
-            { icon: 'ai', label: 'AI Agents', value: '24/7 Active' },
-            { icon: 'speed', label: 'Setup Time', value: '5 Days Avg' },
-            { icon: 'growth', label: 'Brands Served', value: 'Growing' },
-          ].map((m, i) => (
-            <motion.div
-              key={m.label}
-              animate={{ y: [0, -6, 0] }}
-              transition={{
-                duration: 3 + i,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: i * 0.5,
-              }}
-              style={{
-                background: 'rgba(255,255,255,0.045)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                borderRadius: 14,
-                padding: '13px 22px',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 11,
-              }}
-            >
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: C.accent,
-                }}
-              >
-                <MetricIcon name={m.icon} />
-              </span>
-              <div style={{ textAlign: 'left' }}>
-                <div
-                  style={{
-                    fontSize: 10.5,
-                    color: C.muted,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
-                  }}
-                >
-                  {m.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 14.5,
-                    fontWeight: 650,
-                    color: C.accent,
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  {m.value}
-                </div>
-              </div>
-            </motion.div>
-          ))}
         </motion.div>
 
         <motion.p
