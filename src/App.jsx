@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { motion, useInView, AnimatePresence, useScroll, useSpring } from 'framer-motion'
 
 /* ============================================================
    RESPONSIVE HOOK
@@ -18,33 +18,222 @@ function useIsMobile(breakpoint = 860) {
 }
 
 /* ============================================================
-   LITHOS LABS — DESIGN SYSTEM
+   LITHOS LABS — DESIGN SYSTEM (Elevated Monochrome)
    ============================================================ */
 const C = {
   bg: '#000000',
   accent: '#FFFFFF',
   text: '#FFFFFF',
   muted: 'rgba(255,255,255,0.55)',
-  border: '#2A2A2A',
-  card: '#111111',
+  faint: 'rgba(255,255,255,0.32)',
+  border: 'rgba(255,255,255,0.12)',
+  borderStrong: 'rgba(255,255,255,0.28)',
+  card: 'rgba(10,10,10,0.72)',
+  cardSolid: '#0B0B0B',
 }
 
 const FONT =
   "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 const MAXW = 1180
-const PAD = 80
+const PAD = 110
+
+/* ============================================================
+   PARTICLE NETWORK — full-page animated background
+   ============================================================ */
+function ParticleNetwork() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const coarse = window.matchMedia('(pointer: coarse)').matches
+
+    let W = 0
+    let H = 0
+    let particles = []
+    let raf = null
+    let running = true
+    const mouse = { x: null, y: null }
+
+    const LINK = 140
+    const MOUSE_LINK = 200
+
+    function build() {
+      W = window.innerWidth
+      H = window.innerHeight
+      canvas.width = W * dpr
+      canvas.height = H * dpr
+      canvas.style.width = `${W}px`
+      canvas.style.height = `${H}px`
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const density = coarse ? 26000 : 16000
+      const count = Math.min(Math.floor((W * H) / density), 120)
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.32,
+        vy: (Math.random() - 0.5) * 0.32,
+        r: Math.random() * 1.3 + 0.6,
+      }))
+    }
+
+    function draw(animate = true) {
+      ctx.clearRect(0, 0, W, H)
+
+      for (const p of particles) {
+        if (animate) {
+          p.x += p.vx
+          p.y += p.vy
+          if (p.x < -24) p.x = W + 24
+          if (p.x > W + 24) p.x = -24
+          if (p.y < -24) p.y = H + 24
+          if (p.y > H + 24) p.y = -24
+        }
+      }
+
+      ctx.lineWidth = 1
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i]
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j]
+          const dx = a.x - b.x
+          const dy = a.y - b.y
+          const d2 = dx * dx + dy * dy
+          if (d2 < LINK * LINK) {
+            const alpha = (1 - Math.sqrt(d2) / LINK) * 0.13
+            ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`
+            ctx.beginPath()
+            ctx.moveTo(a.x, a.y)
+            ctx.lineTo(b.x, b.y)
+            ctx.stroke()
+          }
+        }
+
+        if (mouse.x !== null) {
+          const dx = a.x - mouse.x
+          const dy = a.y - mouse.y
+          const d2 = dx * dx + dy * dy
+          if (d2 < MOUSE_LINK * MOUSE_LINK) {
+            const alpha = (1 - Math.sqrt(d2) / MOUSE_LINK) * 0.22
+            ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`
+            ctx.beginPath()
+            ctx.moveTo(a.x, a.y)
+            ctx.lineTo(mouse.x, mouse.y)
+            ctx.stroke()
+          }
+        }
+
+        ctx.fillStyle = 'rgba(255,255,255,0.45)'
+        ctx.beginPath()
+        ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    function loop() {
+      if (!running) return
+      draw(true)
+      raf = requestAnimationFrame(loop)
+    }
+
+    function onResize() {
+      build()
+      if (reduced) draw(false)
+    }
+
+    function onMove(e) {
+      mouse.x = e.clientX
+      mouse.y = e.clientY
+    }
+    function onLeave() {
+      mouse.x = null
+      mouse.y = null
+    }
+    function onVisibility() {
+      if (document.hidden) {
+        running = false
+        if (raf) cancelAnimationFrame(raf)
+      } else if (!reduced) {
+        running = true
+        loop()
+      }
+    }
+
+    build()
+    if (reduced) {
+      draw(false)
+    } else {
+      loop()
+      if (!coarse) {
+        window.addEventListener('mousemove', onMove)
+        window.addEventListener('mouseout', onLeave)
+      }
+      document.addEventListener('visibilitychange', onVisibility)
+    }
+    window.addEventListener('resize', onResize)
+
+    return () => {
+      running = false
+      if (raf) cancelAnimationFrame(raf)
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseout', onLeave)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+      }}
+    />
+  )
+}
+
+/* ============================================================
+   SCROLL PROGRESS — thin white line at very top
+   ============================================================ */
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll()
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 26, mass: 0.4 })
+  return (
+    <motion.div
+      aria-hidden
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 2,
+        background: C.accent,
+        transformOrigin: '0% 50%',
+        scaleX,
+        zIndex: 200,
+      }}
+    />
+  )
+}
 
 /* ============================================================
    REVEAL — scroll-in animation wrapper
    ============================================================ */
-function Reveal({ children, delay = 0, y = 30, style }) {
+function Reveal({ children, delay = 0, y = 34, style }) {
   return (
     <motion.div
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
       style={style}
     >
       {children}
@@ -58,8 +247,8 @@ function Reveal({ children, delay = 0, y = 30, style }) {
 function PressButton({ children, style, ...rest }) {
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.96 }}
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
       style={style}
       {...rest}
@@ -76,8 +265,6 @@ function CountUp({ value }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
 
-  // Parse once into stable primitives (avoid putting the regex match
-  // object in the effect deps — it would re-run on every render).
   const match = String(value).match(/^(\d+)(.*)$/)
   const isNumeric = match !== null
   const target = isNumeric ? parseInt(match[1], 10) : 0
@@ -120,63 +307,54 @@ function CountUp({ value }) {
 }
 
 /* ============================================================
-   ICONS — minimal line glyphs (white)
+   ICONS — minimal line glyphs (inherit color)
    ============================================================ */
-function Icon({ name }) {
+function Icon({ name, size = 22 }) {
   const common = {
-    width: 22,
-    height: 22,
+    width: size,
+    height: size,
     viewBox: '0 0 24 24',
     fill: 'none',
-    stroke: C.accent,
+    stroke: 'currentColor',
     strokeWidth: 1.6,
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
+    'aria-hidden': true,
   }
   switch (name) {
     case 'crm':
       return (
         <svg {...common}>
-          <path d="M3 7h18M3 12h18M3 17h10" />
-          <circle cx="18" cy="17" r="2.5" />
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
         </svg>
       )
     case 'ai':
       return (
         <svg {...common}>
-          <rect x="4" y="4" width="16" height="16" rx="3" />
-          <path d="M9 9h6M9 13h6M9 17h3" />
-          <circle cx="12" cy="2.5" r="0.6" fill={C.accent} />
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M19.1 4.9l-2.9 2.9M7.8 16.2l-2.9 2.9" />
         </svg>
       )
     case 'web':
       return (
         <svg {...common}>
           <circle cx="12" cy="12" r="9" />
-          <path d="M3 12h18" />
-          <path d="M12 3a14 14 0 010 18" />
-          <path d="M12 3a14 14 0 000 18" />
+          <path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21M12 3c-2.5 2.6-3.9 5.7-3.9 9s1.4 6.4 3.9 9" />
         </svg>
       )
     case 'growth':
       return (
         <svg {...common}>
-          <path d="M3 17l5-5 4 4 8-9" />
-          <path d="M16 7h4v4" />
+          <path d="M3 17l6-6 4 4 8-8" />
+          <path d="M15 7h6v6" />
         </svg>
       )
     case 'arrow':
       return (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={C.accent}
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+        <svg {...common} width={16} height={16}>
           <path d="M5 12h14M13 6l6 6-6 6" />
         </svg>
       )
@@ -185,41 +363,37 @@ function Icon({ name }) {
   }
 }
 
-/* ============================================================
-   METRIC ICONS — clean line glyphs (inherit color)
-   ============================================================ */
 function MetricIcon({ name }) {
   const common = {
-    width: 16,
-    height: 16,
+    width: 18,
+    height: 18,
     viewBox: '0 0 24 24',
     fill: 'none',
     stroke: 'currentColor',
-    strokeWidth: 1.5,
+    strokeWidth: 1.7,
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
+    'aria-hidden': true,
   }
   switch (name) {
     case 'ai':
       return (
         <svg {...common}>
-          <rect x="3" y="11" width="18" height="10" rx="2" />
-          <path d="M12 11V7" />
-          <circle cx="12" cy="5" r="2" />
-          <path d="M8 11V9a4 4 0 018 0v2" />
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
         </svg>
       )
     case 'speed':
       return (
         <svg {...common}>
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          <path d="M13 2L4.5 13.5H11l-1 8.5L18.5 10H12l1-8z" />
         </svg>
       )
     case 'growth':
       return (
         <svg {...common}>
-          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-          <polyline points="16 7 22 7 22 13" />
+          <path d="M3 17l6-6 4 4 8-8" />
+          <path d="M15 7h6v6" />
         </svg>
       )
     default:
@@ -232,12 +406,21 @@ function MetricIcon({ name }) {
    ============================================================ */
 const NAV_LINKS = [
   { label: 'Services', href: '#services' },
-  { label: 'Work', href: '#why-lithos' },
+  { label: 'Work', href: '#our-work' },
+  { label: 'Pricing', href: '#pricing' },
   { label: 'About', href: '#how-it-works' },
 ]
 
 function Nav() {
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
     <header
@@ -249,8 +432,9 @@ function Nav() {
         zIndex: 100,
         backdropFilter: 'blur(18px)',
         WebkitBackdropFilter: 'blur(18px)',
-        background: 'rgba(0, 0, 0,0.65)',
-        borderBottom: `1px solid ${C.border}`,
+        background: scrolled ? 'rgba(0,0,0,0.72)' : 'rgba(0,0,0,0.25)',
+        borderBottom: `1px solid ${scrolled ? C.border : 'transparent'}`,
+        transition: 'background 0.35s ease, border-color 0.35s ease',
       }}
     >
       <nav
@@ -258,7 +442,7 @@ function Nav() {
           maxWidth: MAXW,
           margin: '0 auto',
           padding: '0 28px',
-          height: 70,
+          height: 72,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -276,7 +460,7 @@ function Nav() {
             <span
               style={{
                 fontWeight: 700,
-                fontSize: 16,
+                fontSize: 16.5,
                 color: '#FFFFFF',
                 letterSpacing: '-0.4px',
               }}
@@ -286,8 +470,8 @@ function Nav() {
             <span
               style={{
                 fontWeight: 300,
-                fontSize: 16,
-                color: 'rgba(255, 255, 255,0.6)',
+                fontSize: 16.5,
+                color: 'rgba(255,255,255,0.6)',
                 letterSpacing: '-0.4px',
               }}
             >
@@ -306,9 +490,10 @@ function Nav() {
               key={l.label}
               href={l.href}
               style={{
-                fontSize: 14.5,
+                fontSize: 14,
                 color: C.muted,
-                fontWeight: 450,
+                fontWeight: 500,
+                letterSpacing: '0.01em',
                 transition: 'color 0.2s ease',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
@@ -327,9 +512,9 @@ function Nav() {
                 background: C.accent,
                 color: C.bg,
                 fontSize: 14,
-                fontWeight: 600,
-                padding: '10px 20px',
-                borderRadius: 9,
+                fontWeight: 650,
+                padding: '11px 22px',
+                borderRadius: 999,
                 letterSpacing: '-0.01em',
               }}
             >
@@ -396,7 +581,7 @@ function Nav() {
             style={{
               overflow: 'hidden',
               borderBottom: `1px solid ${C.border}`,
-              background: 'rgba(0, 0, 0,0.95)',
+              background: 'rgba(0,0,0,0.95)',
             }}
           >
             <div
@@ -437,7 +622,7 @@ function Nav() {
                     fontSize: 15,
                     fontWeight: 600,
                     padding: '13px 0',
-                    borderRadius: 9,
+                    borderRadius: 999,
                   }}
                 >
                   Book a Call
@@ -456,6 +641,26 @@ function Nav() {
    ============================================================ */
 function Hero() {
   const isMobile = useIsMobile()
+
+  const line1 = 'Building the Foundation'
+  const line2 = 'Behind Scalable Brands'
+
+  const word = (w, i, base = 0) => (
+    <motion.span
+      key={`${w}-${i}`}
+      initial={{ opacity: 0, y: 50, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{
+        delay: base + i * 0.09,
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      style={{ display: 'inline-block', marginRight: '0.28em' }}
+    >
+      {w}
+    </motion.span>
+  )
+
   return (
     <section
       id="hero"
@@ -467,24 +672,11 @@ function Hero() {
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        padding: '120px 28px 80px',
+        padding: '140px 28px 90px',
         overflow: 'hidden',
-        background: '#000000',
       }}
     >
-      {/* Layer 2 — radial glow, top center */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          zIndex: 0,
-          background:
-            'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 255, 255,0.07) 0%, transparent 60%)',
-        }}
-      />
-      {/* Layer 3 — second glow, bottom left */}
+      {/* Radial glow, top center */}
       <div
         aria-hidden
         style={{
@@ -492,37 +684,20 @@ function Hero() {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(ellipse 50% 40% at -10% 100%, rgba(255, 255, 255,0.04) 0%, transparent 50%)',
+            'radial-gradient(ellipse 85% 65% at 50% -12%, rgba(255,255,255,0.09) 0%, transparent 62%)',
         }}
       />
-      {/* Layer 4 — animated dot grid */}
-      <div
-        aria-hidden
-        className="lithos-hero-grid"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage:
-            'radial-gradient(circle, rgba(255, 255, 255,0.15) 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
-          backgroundPosition: '0px 0px',
-          maskImage:
-            'radial-gradient(ellipse 78% 60% at 50% 42%, rgba(0,0,0,0.9), transparent 78%)',
-          WebkitMaskImage:
-            'radial-gradient(ellipse 78% 60% at 50% 42%, rgba(0,0,0,0.9), transparent 78%)',
-          pointerEvents: 'none',
-        }}
-      />
-      {/* Layer 5 — noise texture overlay */}
+      {/* Bottom fade to anchor content */}
       <div
         aria-hidden
         style={{
           position: 'absolute',
-          inset: 0,
-          opacity: 0.4,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 220,
           pointerEvents: 'none',
-          background:
-            'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.03\'/%3E%3C/svg%3E")',
+          background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.85))',
         }}
       />
 
@@ -530,7 +705,7 @@ function Hero() {
         style={{
           position: 'relative',
           zIndex: 1,
-          maxWidth: 880,
+          maxWidth: 980,
           margin: '0 auto',
           width: '100%',
         }}
@@ -542,19 +717,24 @@ function Hero() {
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
-            padding: '7px 15px',
+            gap: 9,
+            padding: '8px 18px',
             borderRadius: 999,
-            border: `1px solid ${C.border}`,
-            background: C.card,
-            fontSize: 12.5,
+            border: `1px solid ${C.borderStrong}`,
+            background: 'rgba(255,255,255,0.04)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            fontSize: 12,
             color: C.accent,
-            letterSpacing: '0.04em',
+            letterSpacing: '0.18em',
             textTransform: 'uppercase',
-            marginBottom: 34,
+            fontWeight: 600,
+            marginBottom: 40,
           }}
         >
-          <span
+          <motion.span
+            animate={{ opacity: [1, 0.25, 1] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
             style={{
               width: 6,
               height: 6,
@@ -568,43 +748,55 @@ function Hero() {
         <h1
           className="lithos-hero-title"
           style={{
-            fontSize: isMobile ? 36 : 64,
-            fontWeight: 700,
+            fontSize: isMobile ? 'clamp(38px, 11vw, 52px)' : 'clamp(48px, 5.6vw, 78px)',
+            fontWeight: 750,
             color: C.text,
-            letterSpacing: '-0.035em',
-            lineHeight: 1.1,
-            marginBottom: 26,
+            letterSpacing: '-0.045em',
+            lineHeight: 1.02,
+            marginBottom: 30,
           }}
         >
-          {'Building the Foundation Behind Scalable Brands'
-            .split(' ')
-            .map((word, i) => (
-              <motion.span
-                key={i}
-                initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                transition={{
-                  delay: i * 0.1,
-                  duration: 0.7,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                style={{ display: 'inline-block', marginRight: '0.3em' }}
-              >
-                {word}
-              </motion.span>
-            ))}
+          <span style={{ display: 'block' }}>
+            {line1.split(' ').map((w, i) => word(w, i, 0.05))}
+          </span>
+          <span style={{ display: 'block' }}>
+            {line2.split(' ').map((w, i) =>
+              w === 'Scalable' ? (
+                <motion.span
+                  key={`${w}-${i}`}
+                  initial={{ opacity: 0, y: 50, filter: 'blur(10px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{
+                    delay: 0.32 + i * 0.09,
+                    duration: 0.8,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  style={{
+                    display: 'inline-block',
+                    marginRight: '0.28em',
+                    color: 'transparent',
+                    WebkitTextStroke: '1.5px rgba(255,255,255,0.85)',
+                  }}
+                >
+                  {w}
+                </motion.span>
+              ) : (
+                word(w, i, 0.32)
+              )
+            )}
+          </span>
         </h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15 }}
+          transition={{ duration: 0.7, delay: 0.55 }}
           style={{
-            fontSize: 20,
+            fontSize: isMobile ? 17 : 20,
             color: C.muted,
-            lineHeight: 1.6,
-            maxWidth: 620,
-            margin: '0 auto 40px',
+            lineHeight: 1.65,
+            maxWidth: 640,
+            margin: '0 auto 44px',
           }}
         >
           We build CRM systems, AI automation, and content infrastructure for
@@ -614,13 +806,67 @@ function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.35 }}
+          transition={{ duration: 0.7, delay: 0.7 }}
+          style={{
+            display: 'flex',
+            gap: 14,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            marginBottom: 52,
+          }}
+        >
+          <a
+            href="https://calendly.com/lithoslabs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <PressButton
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                background: C.accent,
+                color: C.bg,
+                fontSize: 15.5,
+                fontWeight: 650,
+                padding: '16px 32px',
+                borderRadius: 999,
+                letterSpacing: '-0.01em',
+                boxShadow: '0 0 42px rgba(255,255,255,0.18)',
+              }}
+            >
+              Book Strategy Call <Icon name="arrow" />
+            </PressButton>
+          </a>
+          <a href="#our-work">
+            <PressButton
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                color: C.accent,
+                fontSize: 15.5,
+                fontWeight: 600,
+                padding: '16px 32px',
+                borderRadius: 999,
+                border: `1px solid ${C.borderStrong}`,
+                letterSpacing: '-0.01em',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+              }}
+            >
+              See Our Work
+            </PressButton>
+          </a>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.85 }}
           style={{
             display: 'flex',
             flexWrap: 'wrap',
             gap: 14,
             justifyContent: 'center',
-            marginBottom: 40,
           }}
         >
           {[
@@ -638,15 +884,15 @@ function Hero() {
                 delay: i * 0.5,
               }}
               style={{
-                background: 'rgba(255, 255, 255,0.06)',
-                border: '0.5px solid rgba(255, 255, 255,0.15)',
-                borderRadius: 12,
-                padding: '12px 20px',
+                background: 'rgba(255,255,255,0.045)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                borderRadius: 14,
+                padding: '13px 22px',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 10,
+                gap: 11,
               }}
             >
               <span
@@ -662,17 +908,18 @@ function Hero() {
               <div style={{ textAlign: 'left' }}>
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: 10.5,
                     color: C.muted,
-                    letterSpacing: '0.04em',
+                    letterSpacing: '0.08em',
                     textTransform: 'uppercase',
+                    fontWeight: 600,
                   }}
                 >
                   {m.label}
                 </div>
                 <div
                   style={{
-                    fontSize: 14,
+                    fontSize: 14.5,
                     fontWeight: 650,
                     color: C.accent,
                     letterSpacing: '-0.01em',
@@ -685,63 +932,16 @@ function Hero() {
           ))}
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25 }}
-          style={{
-            display: 'flex',
-            gap: 14,
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-          }}
-        >
-          <a
-            href="https://calendly.com/lithoslabs"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <PressButton
-              style={{
-                background: C.accent,
-                color: C.bg,
-                fontSize: 15.5,
-                fontWeight: 600,
-                padding: '15px 30px',
-                borderRadius: 11,
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Book Strategy Call
-            </PressButton>
-          </a>
-          <a href="#services">
-            <PressButton
-              style={{
-                background: 'transparent',
-                color: C.accent,
-                fontSize: 15.5,
-                fontWeight: 600,
-                padding: '15px 30px',
-                borderRadius: 11,
-                border: `1px solid ${C.accent}`,
-                letterSpacing: '-0.01em',
-              }}
-            >
-              See Our Work
-            </PressButton>
-          </a>
-        </motion.div>
-
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
+          transition={{ duration: 0.7, delay: 1 }}
           style={{
-            marginTop: 46,
-            fontSize: 13,
-            color: C.muted,
-            letterSpacing: '0.02em',
+            marginTop: 48,
+            fontSize: 12.5,
+            color: C.faint,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
           }}
         >
           Trusted by growing brands in Aruba and beyond
@@ -752,19 +952,20 @@ function Hero() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.9, duration: 0.6 }}
+        transition={{ delay: 1.2, duration: 0.6 }}
         style={{
           position: 'absolute',
-          bottom: 34,
+          bottom: 30,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: 8,
+          zIndex: 1,
         }}
       >
-        <span style={{ fontSize: 11, color: C.muted, letterSpacing: '0.15em' }}>
+        <span style={{ fontSize: 10.5, color: C.faint, letterSpacing: '0.22em' }}>
           SCROLL
         </span>
         <motion.div
@@ -772,7 +973,7 @@ function Hero() {
           transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
           style={{
             width: 1,
-            height: 34,
+            height: 36,
             background: `linear-gradient(${C.accent}, transparent)`,
           }}
         />
@@ -782,50 +983,153 @@ function Hero() {
 }
 
 /* ============================================================
+   MARQUEE — scrolling capability strip
+   ============================================================ */
+const MARQUEE_ITEMS = [
+  'CRM Systems',
+  'AI Automation',
+  'Web Development',
+  'Growth Engines',
+  'Lead Generation',
+  'Content Infrastructure',
+]
+
+function Marquee() {
+  const row = MARQUEE_ITEMS.map((t, i) => (
+    <span
+      key={`${t}-${i}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 34,
+        marginRight: 34,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 15,
+          fontWeight: 650,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.5)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {t}
+      </span>
+      <span
+        aria-hidden
+        style={{
+          width: 5,
+          height: 5,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.35)',
+          flexShrink: 0,
+        }}
+      />
+    </span>
+  ))
+
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        borderTop: `1px solid ${C.border}`,
+        borderBottom: `1px solid ${C.border}`,
+        padding: '22px 0',
+        background: 'rgba(255,255,255,0.015)',
+        zIndex: 1,
+      }}
+    >
+      <div className="lithos-marquee-track">
+        {row}
+        {row}
+      </div>
+      {/* Edge fades */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          background:
+            'linear-gradient(90deg, #000 0%, transparent 12%, transparent 88%, #000 100%)',
+        }}
+      />
+    </div>
+  )
+}
+
+/* ============================================================
    SHARED — Section header
    ============================================================ */
-function SectionHeader({ kicker, title, sub, center = true }) {
+function SectionHeader({ kicker, title, sub, center = true, num }) {
   return (
     <div
       style={{
         textAlign: center ? 'center' : 'left',
-        maxWidth: center ? 680 : 'none',
+        maxWidth: center ? 720 : 'none',
         margin: center ? '0 auto' : 0,
       }}
     >
       <div
         style={{
-          fontSize: 12.5,
-          color: C.accent,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          marginBottom: 18,
-          fontWeight: 600,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 14,
+          marginBottom: 22,
         }}
       >
-        {kicker}
+        <span
+          aria-hidden
+          style={{
+            width: 34,
+            height: 1,
+            background: 'rgba(255,255,255,0.4)',
+          }}
+        />
+        <span
+          style={{
+            fontSize: 12,
+            color: C.accent,
+            letterSpacing: '0.24em',
+            textTransform: 'uppercase',
+            fontWeight: 650,
+          }}
+        >
+          {num ? `${num} — ${kicker}` : kicker}
+        </span>
+        <span
+          aria-hidden
+          style={{
+            width: 34,
+            height: 1,
+            background: 'rgba(255,255,255,0.4)',
+          }}
+        />
       </div>
       <h2
         style={{
-          fontSize: 42,
-          fontWeight: 700,
+          fontSize: 'clamp(34px, 4.6vw, 54px)',
+          fontWeight: 730,
           color: C.text,
-          letterSpacing: '-0.03em',
-          lineHeight: 1.12,
-          marginBottom: sub ? 18 : 0,
+          letterSpacing: '-0.035em',
+          lineHeight: 1.08,
+          marginBottom: sub ? 20 : 0,
         }}
       >
         {title}
       </h2>
       {sub && (
-        <p style={{ fontSize: 17, color: C.muted, lineHeight: 1.6 }}>{sub}</p>
+        <p style={{ fontSize: 17.5, color: C.muted, lineHeight: 1.65 }}>{sub}</p>
       )}
     </div>
   )
 }
 
 /* ============================================================
-   SERVICES
+   SERVICES — numbered cards with white hover-invert
    ============================================================ */
 const SERVICES = [
   {
@@ -850,48 +1154,79 @@ const SERVICES = [
   },
 ]
 
-function ServiceCard({ s }) {
+function ServiceCard({ s, index }) {
   const [hover, setHover] = useState(false)
+  const fg = hover ? '#000000' : C.text
+  const fgMuted = hover ? 'rgba(0,0,0,0.6)' : C.muted
+
   return (
     <motion.div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      animate={{ y: hover ? -6 : 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      animate={{ y: hover ? -8 : 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
       style={{
-        background: C.card,
-        border: `1px solid ${hover ? 'rgba(255, 255, 255,0.25)' : C.border}`,
-        borderRadius: 18,
-        padding: '34px 32px',
+        position: 'relative',
+        background: hover ? '#FFFFFF' : C.card,
+        border: `1px solid ${hover ? '#FFFFFF' : C.border}`,
+        borderRadius: 20,
+        padding: '38px 34px',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: 220,
-        transition: 'border-color 0.25s ease',
+        minHeight: 250,
         height: '100%',
+        overflow: 'hidden',
+        transition: 'background 0.35s ease, border-color 0.35s ease',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+        boxShadow: hover ? '0 24px 60px rgba(255,255,255,0.12)' : 'none',
+        cursor: 'default',
       }}
     >
+      {/* Ghost index number */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 14,
+          right: 22,
+          fontSize: 84,
+          fontWeight: 800,
+          letterSpacing: '-0.05em',
+          lineHeight: 1,
+          color: hover ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)',
+          transition: 'color 0.35s ease',
+          userSelect: 'none',
+        }}
+      >
+        0{index + 1}
+      </div>
+
       <div
         style={{
-          width: 50,
-          height: 50,
-          borderRadius: 13,
-          background: 'rgba(255, 255, 255,0.08)',
-          border: `1px solid ${C.border}`,
+          width: 52,
+          height: 52,
+          borderRadius: 14,
+          background: hover ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.07)',
+          border: `1px solid ${hover ? 'rgba(0,0,0,0.14)' : C.border}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 22,
+          marginBottom: 24,
+          color: fg,
+          transition: 'all 0.35s ease',
         }}
       >
         <Icon name={s.icon} />
       </div>
       <h3
         style={{
-          fontSize: 20,
-          fontWeight: 650,
-          color: C.text,
-          marginBottom: 10,
+          fontSize: 21,
+          fontWeight: 680,
+          color: fg,
+          marginBottom: 11,
           letterSpacing: '-0.02em',
+          transition: 'color 0.35s ease',
         }}
       >
         {s.title}
@@ -899,22 +1234,24 @@ function ServiceCard({ s }) {
       <p
         style={{
           fontSize: 15,
-          color: C.muted,
-          lineHeight: 1.62,
+          color: fgMuted,
+          lineHeight: 1.65,
           flex: 1,
+          transition: 'color 0.35s ease',
         }}
       >
         {s.desc}
       </p>
       <div
         style={{
-          marginTop: 22,
+          marginTop: 24,
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          transform: hover ? 'translateX(5px)' : 'translateX(0)',
-          opacity: hover ? 1 : 0.55,
-          transition: 'all 0.25s ease',
+          color: fg,
+          transform: hover ? 'translateX(6px)' : 'translateX(0)',
+          opacity: hover ? 1 : 0.5,
+          transition: 'all 0.3s ease',
         }}
       >
         <Icon name="arrow" />
@@ -928,11 +1265,12 @@ function Services() {
     <section
       id="services"
       className="lithos-section"
-      style={{ padding: `${PAD}px 28px` }}
+      style={{ position: 'relative', padding: `${PAD}px 28px`, zIndex: 1 }}
     >
       <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
         <Reveal>
           <SectionHeader
+            num="01"
             kicker="What We Build"
             title="Infrastructure, not band-aids"
             sub="Four pillars that turn a scattered operation into a system that scales without you."
@@ -943,8 +1281,8 @@ function Services() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 20,
-            marginTop: 60,
+            gap: 22,
+            marginTop: 64,
           }}
         >
           {SERVICES.map((s, i) => (
@@ -952,11 +1290,11 @@ function Services() {
               key={s.title}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
+              transition={{ delay: i * 0.1, duration: 0.55 }}
               viewport={{ once: true }}
               style={{ height: '100%' }}
             >
-              <ServiceCard s={s} />
+              <ServiceCard s={s} index={i} />
             </motion.div>
           ))}
         </div>
@@ -966,17 +1304,17 @@ function Services() {
 }
 
 /* ============================================================
-   PRICING
+   PRICING — popular plan inverted to white
    ============================================================ */
-function CheckIcon() {
+function CheckIcon({ dark }) {
   return (
     <svg
       width="15"
       height="15"
       viewBox="0 0 24 24"
       fill="none"
-      stroke={C.accent}
-      strokeWidth="2.2"
+      stroke={dark ? '#000000' : C.accent}
+      strokeWidth="2.4"
       strokeLinecap="round"
       strokeLinejoin="round"
       style={{ flexShrink: 0, marginTop: 3 }}
@@ -1042,14 +1380,15 @@ function Pricing() {
     <section
       id="pricing"
       className="lithos-section"
-      style={{ padding: `${PAD}px 28px` }}
+      style={{ position: 'relative', padding: `${PAD}px 28px`, zIndex: 1 }}
     >
       <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
         <Reveal>
           <SectionHeader
+            num="02"
             kicker="Pricing"
-            title="Simple, Transparent Pricing"
-            sub="Choose the package that fits your business"
+            title="Simple, transparent pricing"
+            sub="Choose the package that fits your business."
           />
         </Reveal>
         <div
@@ -1057,133 +1396,142 @@ function Pricing() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
-            marginTop: 60,
+            gap: 22,
+            marginTop: 64,
             alignItems: 'stretch',
           }}
         >
-          {PLANS.map((p, i) => (
-            <Reveal key={p.name} delay={i * 0.1} style={{ height: '100%' }}>
-              <div
-                style={{
-                  position: 'relative',
-                  background: p.popular
-                    ? 'rgba(255, 255, 255,0.03)'
-                    : '#111111',
-                  border: p.popular
-                    ? '0.5px solid rgba(255, 255, 255,0.4)'
-                    : '0.5px solid rgba(255,255,255,0.06)',
-                  borderRadius: 16,
-                  padding: 32,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                {p.popular && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: -12,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: C.accent,
-                      color: C.bg,
-                      fontSize: 11.5,
-                      fontWeight: 700,
-                      letterSpacing: '0.04em',
-                      textTransform: 'uppercase',
-                      padding: '5px 14px',
-                      borderRadius: 999,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Most Popular
-                  </div>
-                )}
-                <h3
+          {PLANS.map((p, i) => {
+            const dark = p.popular
+            return (
+              <Reveal key={p.name} delay={i * 0.1} style={{ height: '100%' }}>
+                <motion.div
+                  whileHover={{ y: -8 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
                   style={{
-                    fontSize: 20,
-                    fontWeight: 650,
-                    color: C.text,
-                    letterSpacing: '-0.02em',
-                    marginBottom: 10,
-                  }}
-                >
-                  {p.name}
-                </h3>
-                <div
-                  style={{
-                    fontSize: 36,
-                    fontWeight: 700,
-                    color: C.accent,
-                    letterSpacing: '-0.03em',
-                    marginBottom: 6,
-                  }}
-                >
-                  {p.price}
-                </div>
-                <p
-                  style={{
-                    fontSize: 14,
-                    color: C.muted,
-                    lineHeight: 1.5,
-                    marginBottom: 26,
-                  }}
-                >
-                  {p.best}
-                </p>
-                <div
-                  style={{
+                    position: 'relative',
+                    background: dark ? '#FFFFFF' : C.card,
+                    border: dark
+                      ? '1px solid #FFFFFF'
+                      : `1px solid ${C.border}`,
+                    borderRadius: 20,
+                    padding: 36,
+                    height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 13,
-                    marginBottom: 30,
-                    flex: 1,
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
+                    boxShadow: dark
+                      ? '0 24px 80px rgba(255,255,255,0.14)'
+                      : 'none',
                   }}
                 >
-                  {p.features.map((f) => (
+                  {p.popular && (
                     <div
-                      key={f}
                       style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 11,
+                        position: 'absolute',
+                        top: -13,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: '#000000',
+                        color: '#FFFFFF',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        padding: '6px 16px',
+                        borderRadius: 999,
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      <CheckIcon />
-                      <span
+                      Most Popular
+                    </div>
+                  )}
+                  <h3
+                    style={{
+                      fontSize: 19,
+                      fontWeight: 650,
+                      color: dark ? '#000' : C.text,
+                      letterSpacing: '-0.02em',
+                      marginBottom: 12,
+                    }}
+                  >
+                    {p.name}
+                  </h3>
+                  <div
+                    style={{
+                      fontSize: 38,
+                      fontWeight: 750,
+                      color: dark ? '#000' : C.accent,
+                      letterSpacing: '-0.035em',
+                      marginBottom: 7,
+                    }}
+                  >
+                    {p.price}
+                  </div>
+                  <p
+                    style={{
+                      fontSize: 14,
+                      color: dark ? 'rgba(0,0,0,0.6)' : C.muted,
+                      lineHeight: 1.5,
+                      marginBottom: 28,
+                    }}
+                  >
+                    {p.best}
+                  </p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 13,
+                      marginBottom: 32,
+                      flex: 1,
+                    }}
+                  >
+                    {p.features.map((f) => (
+                      <div
+                        key={f}
                         style={{
-                          fontSize: 14.5,
-                          color: C.text,
-                          opacity: 0.82,
-                          lineHeight: 1.45,
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 11,
                         }}
                       >
-                        {f}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <PressButton
-                  onClick={scrollToContact}
-                  style={{
-                    width: '100%',
-                    background: p.popular ? C.accent : 'transparent',
-                    color: p.popular ? C.bg : C.accent,
-                    border: p.popular ? 'none' : `1px solid ${C.accent}`,
-                    fontSize: 15,
-                    fontWeight: 600,
-                    padding: '14px 0',
-                    borderRadius: 11,
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  {p.cta}
-                </PressButton>
-              </div>
-            </Reveal>
-          ))}
+                        <CheckIcon dark={dark} />
+                        <span
+                          style={{
+                            fontSize: 14.5,
+                            color: dark ? 'rgba(0,0,0,0.82)' : C.text,
+                            opacity: dark ? 1 : 0.82,
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          {f}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <PressButton
+                    onClick={scrollToContact}
+                    style={{
+                      width: '100%',
+                      background: dark ? '#000000' : 'transparent',
+                      color: dark ? '#FFFFFF' : C.accent,
+                      border: dark ? 'none' : `1px solid ${C.borderStrong}`,
+                      fontSize: 15,
+                      fontWeight: 650,
+                      padding: '15px 0',
+                      borderRadius: 999,
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    {p.cta}
+                  </PressButton>
+                </motion.div>
+              </Reveal>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -1219,11 +1567,19 @@ function HowItWorks() {
     <section
       id="how-it-works"
       className="lithos-section"
-      style={{ padding: `${PAD}px 28px`, background: 'rgba(255, 255, 255,0.015)' }}
+      style={{
+        position: 'relative',
+        padding: `${PAD}px 28px`,
+        background: 'rgba(255,255,255,0.02)',
+        borderTop: `1px solid ${C.border}`,
+        borderBottom: `1px solid ${C.border}`,
+        zIndex: 1,
+      }}
     >
       <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
         <Reveal>
           <SectionHeader
+            num="03"
             kicker="The Lithos Framework"
             title="Three steps to a system that scales"
             sub="No guesswork. A repeatable path from chaos to compounding growth."
@@ -1238,21 +1594,25 @@ function HowItWorks() {
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 28,
-            marginTop: 70,
+            marginTop: 80,
           }}
         >
           {/* Connecting line */}
-          <div
+          <motion.div
             aria-hidden
             className="lithos-steps-line"
+            initial={{ scaleX: 0 }}
+            animate={inView ? { scaleX: 1 } : {}}
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
             style={{
               position: 'absolute',
-              top: 26,
+              top: 30,
               left: '16%',
               right: '16%',
               height: 1,
+              transformOrigin: '0% 50%',
               background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)`,
-              opacity: 0.4,
+              opacity: 0.45,
             }}
           />
           {STEPS.map((step, i) => (
@@ -1260,19 +1620,39 @@ function HowItWorks() {
               key={step.n}
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: i * 0.15 }}
+              transition={{ duration: 0.6, delay: i * 0.18 }}
               style={{
                 position: 'relative',
                 textAlign: 'center',
                 padding: '0 12px',
               }}
             >
+              {/* Ghost number behind */}
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  top: -34,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  fontSize: 130,
+                  fontWeight: 800,
+                  color: 'rgba(255,255,255,0.035)',
+                  letterSpacing: '-0.06em',
+                  lineHeight: 1,
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                }}
+              >
+                {step.n}
+              </div>
               <div
                 style={{
-                  width: 54,
-                  height: 54,
+                  position: 'relative',
+                  width: 60,
+                  height: 60,
                   borderRadius: '50%',
-                  margin: '0 auto 24px',
+                  margin: '0 auto 26px',
                   background: C.bg,
                   border: `1px solid ${C.accent}`,
                   display: 'flex',
@@ -1282,14 +1662,15 @@ function HowItWorks() {
                   fontSize: 16,
                   fontWeight: 700,
                   letterSpacing: '0.02em',
+                  boxShadow: '0 0 34px rgba(255,255,255,0.12)',
                 }}
               >
                 {step.n}
               </div>
               <h3
                 style={{
-                  fontSize: 22,
-                  fontWeight: 650,
+                  fontSize: 23,
+                  fontWeight: 680,
                   color: C.text,
                   marginBottom: 12,
                   letterSpacing: '-0.02em',
@@ -1301,7 +1682,7 @@ function HowItWorks() {
                 style={{
                   fontSize: 15,
                   color: C.muted,
-                  lineHeight: 1.62,
+                  lineHeight: 1.65,
                   maxWidth: 290,
                   margin: '0 auto',
                 }}
@@ -1331,16 +1712,45 @@ function WhyLithos() {
     <section
       id="why-lithos"
       className="lithos-section"
-      style={{ padding: `${PAD}px 28px` }}
+      style={{ position: 'relative', padding: `${PAD}px 28px`, zIndex: 1 }}
     >
       <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
         <Reveal>
-          <SectionHeader
-            kicker="Why Lithos"
-            title="Systems over chaos"
-            sub={null}
-            center={false}
-          />
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 14,
+              marginBottom: 22,
+            }}
+          >
+            <span
+              aria-hidden
+              style={{ width: 34, height: 1, background: 'rgba(255,255,255,0.4)' }}
+            />
+            <span
+              style={{
+                fontSize: 12,
+                color: C.accent,
+                letterSpacing: '0.24em',
+                textTransform: 'uppercase',
+                fontWeight: 650,
+              }}
+            >
+              04 — Why Lithos
+            </span>
+          </div>
+          <h2
+            style={{
+              fontSize: 'clamp(34px, 4.6vw, 54px)',
+              fontWeight: 730,
+              color: C.text,
+              letterSpacing: '-0.035em',
+              lineHeight: 1.08,
+            }}
+          >
+            Systems over chaos
+          </h2>
         </Reveal>
         <div
           className="lithos-why-grid"
@@ -1348,50 +1758,63 @@ function WhyLithos() {
             display: 'grid',
             gridTemplateColumns: '1.1fr 1fr',
             gap: 64,
-            marginTop: 56,
+            marginTop: 60,
             alignItems: 'center',
           }}
         >
           <Reveal>
             <blockquote
               style={{
-                fontSize: 34,
-                fontWeight: 600,
+                position: 'relative',
+                fontSize: 'clamp(26px, 3vw, 38px)',
+                fontWeight: 620,
                 color: C.text,
-                lineHeight: 1.28,
+                lineHeight: 1.3,
                 letterSpacing: '-0.025em',
                 margin: 0,
+                paddingLeft: 28,
+                borderLeft: `2px solid ${C.accent}`,
               }}
             >
-              <span style={{ color: C.accent, fontSize: 44, lineHeight: 0 }}>
-                “
+              Most businesses fail not because of bad products — but because of{' '}
+              <span
+                style={{
+                  color: 'transparent',
+                  WebkitTextStroke: '1px rgba(255,255,255,0.9)',
+                }}
+              >
+                bad systems.
               </span>
-              Most businesses fail not because of bad products — but because of
-              bad systems.
             </blockquote>
           </Reveal>
 
           <Reveal delay={0.1}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-              {BULLETS.map((b) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {BULLETS.map((b, i) => (
                 <div
                   key={b}
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 16,
+                    padding: '16px 0',
+                    borderBottom:
+                      i < BULLETS.length - 1 ? `1px solid ${C.border}` : 'none',
                   }}
                 >
                   <span
                     style={{
                       flexShrink: 0,
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: C.accent,
-                      marginTop: 8,
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      color: C.faint,
+                      letterSpacing: '0.06em',
+                      marginTop: 4,
+                      fontVariantNumeric: 'tabular-nums',
                     }}
-                  />
+                  >
+                    0{i + 1}
+                  </span>
                   <span
                     style={{
                       fontSize: 16.5,
@@ -1413,7 +1836,181 @@ function WhyLithos() {
 }
 
 /* ============================================================
-   STATS
+   OUR WORK — live demo portfolio
+   ============================================================ */
+const WORK_ITEMS = [
+  {
+    industry: 'Fashion & Retail',
+    name: 'NOVA Streetwear',
+    desc: 'Editorial e-commerce concept with bold typography, product drops, and lookbook.',
+    href: '/demos/clothing',
+  },
+  {
+    industry: 'Luxury & Jewelry',
+    name: 'Aurelia Fine Jewelry',
+    desc: 'High-end atelier site with collections, craftsmanship story, and private appointments.',
+    href: '/demos/jewelry',
+  },
+  {
+    industry: 'Food & Beverage',
+    name: 'Brew & Co. Aruba',
+    desc: 'Cozy coffee shop site with full menu in AWG, location, and opening hours.',
+    href: '/demos/coffee',
+  },
+  {
+    industry: 'Construction',
+    name: 'Titan Construction Aruba',
+    desc: 'Industrial contractor site with services, project stats, and instant quote form.',
+    href: '/demos/construction',
+  },
+]
+
+function WorkCard({ w, index }) {
+  const [hover, setHover] = useState(false)
+  const fg = hover ? '#000' : C.text
+  return (
+    <motion.a
+      href={w.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      animate={{ y: hover ? -8 : 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        background: hover ? '#FFFFFF' : C.card,
+        border: `1px solid ${hover ? '#FFFFFF' : C.border}`,
+        borderRadius: 20,
+        padding: '38px 34px',
+        transition: 'background 0.35s ease, border-color 0.35s ease',
+        height: '100%',
+        textDecoration: 'none',
+        overflow: 'hidden',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+        boxShadow: hover ? '0 24px 60px rgba(255,255,255,0.12)' : 'none',
+      }}
+    >
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 14,
+          right: 22,
+          fontSize: 84,
+          fontWeight: 800,
+          letterSpacing: '-0.05em',
+          lineHeight: 1,
+          color: hover ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)',
+          transition: 'color 0.35s ease',
+          userSelect: 'none',
+        }}
+      >
+        0{index + 1}
+      </div>
+      <div
+        style={{
+          fontSize: 11.5,
+          color: hover ? 'rgba(0,0,0,0.55)' : C.muted,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          fontWeight: 650,
+          marginBottom: 16,
+          transition: 'color 0.35s ease',
+        }}
+      >
+        {w.industry}
+      </div>
+      <h3
+        style={{
+          fontSize: 23,
+          fontWeight: 680,
+          color: fg,
+          letterSpacing: '-0.02em',
+          marginBottom: 10,
+          transition: 'color 0.35s ease',
+        }}
+      >
+        {w.name}
+      </h3>
+      <p
+        style={{
+          fontSize: 15,
+          color: hover ? 'rgba(0,0,0,0.6)' : C.muted,
+          lineHeight: 1.65,
+          flex: 1,
+          marginBottom: 26,
+          transition: 'color 0.35s ease',
+        }}
+      >
+        {w.desc}
+      </p>
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 9,
+          fontSize: 14.5,
+          fontWeight: 650,
+          color: fg,
+          transform: hover ? 'translateX(6px)' : 'translateX(0)',
+          transition: 'transform 0.3s ease, color 0.35s ease',
+        }}
+      >
+        View Live Demo <Icon name="arrow" />
+      </div>
+    </motion.a>
+  )
+}
+
+function OurWork() {
+  return (
+    <section
+      id="our-work"
+      className="lithos-section"
+      style={{ position: 'relative', padding: `${PAD}px 28px`, zIndex: 1 }}
+    >
+      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+        <Reveal>
+          <SectionHeader
+            num="05"
+            kicker="Portfolio"
+            title="Our work"
+            sub="Explore live demos built by Lithos Labs."
+          />
+        </Reveal>
+        <div
+          className="lithos-work-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 22,
+            marginTop: 64,
+          }}
+        >
+          {WORK_ITEMS.map((w, i) => (
+            <motion.div
+              key={w.name}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1, duration: 0.55 }}
+              viewport={{ once: true }}
+              style={{ height: '100%' }}
+            >
+              <WorkCard w={w} index={i} />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ============================================================
+   STATS — giant numbers with dividers
    ============================================================ */
 const STATS = [
   { value: '24/7', label: 'AI agents working for your brand' },
@@ -1427,22 +2024,37 @@ function Stats() {
     <section
       id="results"
       className="lithos-section"
-      style={{ padding: `${PAD}px 28px` }}
+      style={{ position: 'relative', padding: `${PAD}px 28px`, zIndex: 1 }}
     >
       <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
         <Reveal>
           <div
             style={{
+              position: 'relative',
+              overflow: 'hidden',
               background:
-                'linear-gradient(180deg, rgba(255, 255, 255,0.05), rgba(255, 255, 255,0.02))',
+                'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015))',
               border: `1px solid ${C.border}`,
-              borderRadius: 22,
-              padding: '64px 48px',
+              borderRadius: 26,
+              padding: '70px 48px',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
             }}
           >
             <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                background:
+                  'radial-gradient(ellipse 60% 90% at 50% 0%, rgba(255,255,255,0.06), transparent 60%)',
+              }}
+            />
+            <div
               className="lithos-stats-grid"
               style={{
+                position: 'relative',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
                 gap: 32,
@@ -1450,15 +2062,22 @@ function Stats() {
             >
               {STATS.map((st, i) => (
                 <Reveal key={st.value} delay={i * 0.08}>
-                  <div style={{ textAlign: 'center' }}>
+                  <div
+                    className="lithos-stat-cell"
+                    style={{
+                      textAlign: 'center',
+                      borderLeft: i > 0 ? `1px solid ${C.border}` : 'none',
+                      paddingLeft: i > 0 ? 20 : 0,
+                    }}
+                  >
                     <div
                       style={{
-                        fontSize: 52,
-                        fontWeight: 700,
+                        fontSize: 'clamp(42px, 4.6vw, 60px)',
+                        fontWeight: 760,
                         color: C.accent,
-                        letterSpacing: '-0.03em',
+                        letterSpacing: '-0.04em',
                         lineHeight: 1,
-                        marginBottom: 14,
+                        marginBottom: 15,
                       }}
                     >
                       <CountUp value={st.value} />
@@ -1467,7 +2086,7 @@ function Stats() {
                       style={{
                         fontSize: 14.5,
                         color: C.text,
-                        opacity: 0.7,
+                        opacity: 0.68,
                         lineHeight: 1.5,
                         maxWidth: 180,
                         margin: '0 auto',
@@ -1515,13 +2134,14 @@ function Testimonials() {
     <section
       id="testimonials"
       className="lithos-section"
-      style={{ padding: `${PAD}px 28px` }}
+      style={{ position: 'relative', padding: `${PAD}px 28px`, zIndex: 1 }}
     >
       <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
         <Reveal>
           <SectionHeader
+            num="06"
             kicker="Social Proof"
-            title="Built for Businesses Like Yours"
+            title="Built for businesses like yours"
             sub={null}
           />
         </Reveal>
@@ -1530,45 +2150,53 @@ function Testimonials() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
-            marginTop: 60,
+            gap: 22,
+            marginTop: 64,
             alignItems: 'stretch',
           }}
         >
           {TESTIMONIALS.map((t, i) => (
             <Reveal key={t.name} delay={i * 0.1} style={{ height: '100%' }}>
-              <div
+              <motion.div
+                whileHover={{ y: -6 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
                 style={{
                   background: C.card,
                   border: `1px solid ${C.border}`,
-                  borderRadius: 16,
-                  padding: 32,
+                  borderRadius: 20,
+                  padding: 34,
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
+                  backdropFilter: 'blur(6px)',
+                  WebkitBackdropFilter: 'blur(6px)',
                 }}
               >
-                <svg
-                  width="26"
-                  height="26"
-                  viewBox="0 0 24 24"
-                  fill={C.accent}
-                  style={{ opacity: 0.5, marginBottom: 18 }}
+                <div
                   aria-hidden
+                  style={{
+                    fontSize: 64,
+                    lineHeight: 0.6,
+                    fontWeight: 800,
+                    color: 'rgba(255,255,255,0.14)',
+                    marginBottom: 26,
+                    userSelect: 'none',
+                    fontFamily: 'Georgia, serif',
+                  }}
                 >
-                  <path d="M9.5 7C6.46 7 4 9.46 4 12.5V18h6v-6H7c0-1.66 1.34-3 3-3h.5V7zm9 0c-3.04 0-5.5 2.46-5.5 5.5V18h6v-6h-3c0-1.66 1.34-3 3-3h.5V7z" />
-                </svg>
+                  “
+                </div>
                 <p
                   style={{
                     fontSize: 16,
-                    fontStyle: 'italic',
                     color: C.text,
-                    lineHeight: 1.6,
+                    lineHeight: 1.65,
                     flex: 1,
-                    marginBottom: 24,
+                    marginBottom: 26,
+                    opacity: 0.92,
                   }}
                 >
-                  “{t.quote}”
+                  {t.quote}
                 </p>
                 <div
                   style={{
@@ -1579,18 +2207,38 @@ function Testimonials() {
                   <div
                     style={{
                       fontSize: 14,
-                      fontWeight: 600,
+                      fontWeight: 650,
                       color: C.accent,
-                      marginBottom: 5,
+                      marginBottom: 8,
                     }}
                   >
                     {t.name}
                   </div>
-                  <div style={{ fontSize: 13, color: C.muted }}>
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: 12.5,
+                      color: C.muted,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 999,
+                      padding: '5px 12px',
+                    }}
+                  >
+                    <span
+                      aria-hidden
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        background: C.accent,
+                      }}
+                    />
                     {t.result}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </Reveal>
           ))}
         </div>
@@ -1627,14 +2275,17 @@ function ContactForm() {
 
   const inputStyle = {
     width: '100%',
-    background: C.card,
+    background: 'rgba(255,255,255,0.04)',
     border: `1px solid ${C.border}`,
-    borderRadius: 11,
-    padding: '14px 16px',
+    borderRadius: 13,
+    padding: '15px 17px',
     color: C.text,
     fontSize: 15,
     outline: 'none',
     fontFamily: FONT,
+    backdropFilter: 'blur(6px)',
+    WebkitBackdropFilter: 'blur(6px)',
+    transition: 'border-color 0.25s ease',
   }
 
   async function handleSubmit(e) {
@@ -1669,12 +2320,14 @@ function ContactForm() {
         transition={{ duration: 0.5 }}
         style={{
           background: C.card,
-          border: `1px solid rgba(255, 255, 255,0.25)`,
-          borderRadius: 18,
+          border: `1px solid ${C.borderStrong}`,
+          borderRadius: 20,
           padding: '56px 40px',
           textAlign: 'center',
           maxWidth: 560,
           margin: '48px auto 0',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
         }}
       >
         <div
@@ -1682,7 +2335,7 @@ function ContactForm() {
             width: 56,
             height: 56,
             borderRadius: '50%',
-            background: 'rgba(255, 255, 255,0.12)',
+            background: 'rgba(255,255,255,0.12)',
             border: `1px solid ${C.accent}`,
             display: 'flex',
             alignItems: 'center',
@@ -1725,8 +2378,8 @@ function ContactForm() {
     <form
       onSubmit={handleSubmit}
       style={{
-        maxWidth: 620,
-        margin: '52px auto 0',
+        maxWidth: 640,
+        margin: '56px auto 0',
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
@@ -1745,6 +2398,8 @@ function ContactForm() {
           autoComplete="name"
           value={formData.name}
           onChange={update('name')}
+          onFocus={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.5)')}
+          onBlur={(e) => (e.target.style.borderColor = C.border)}
         />
         <input
           style={inputStyle}
@@ -1754,6 +2409,8 @@ function ContactForm() {
           autoComplete="organization"
           value={formData.business_name}
           onChange={update('business_name')}
+          onFocus={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.5)')}
+          onBlur={(e) => (e.target.style.borderColor = C.border)}
         />
       </div>
       <input
@@ -1765,6 +2422,8 @@ function ContactForm() {
         autoComplete="email"
         value={formData.email}
         onChange={update('email')}
+        onFocus={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.5)')}
+        onBlur={(e) => (e.target.style.borderColor = C.border)}
       />
       <select
         style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
@@ -1773,11 +2432,11 @@ function ContactForm() {
         onChange={update('service_needed')}
         required
       >
-        <option value="" disabled style={{ background: C.bg }}>
+        <option value="" disabled style={{ background: '#000' }}>
           What do you need?
         </option>
         {SERVICE_OPTIONS.map((o) => (
-          <option key={o} value={o} style={{ background: C.bg }}>
+          <option key={o} value={o} style={{ background: '#000' }}>
             {o}
           </option>
         ))}
@@ -1789,6 +2448,8 @@ function ContactForm() {
         rows={4}
         value={formData.message}
         onChange={update('message')}
+        onFocus={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.5)')}
+        onBlur={(e) => (e.target.style.borderColor = C.border)}
       />
       {error && <p style={{ fontSize: 13.5, color: '#FF4444' }}>{error}</p>}
       <PressButton
@@ -1798,11 +2459,12 @@ function ContactForm() {
           background: C.accent,
           color: C.bg,
           fontSize: 15.5,
-          fontWeight: 600,
-          padding: '15px 0',
-          borderRadius: 11,
+          fontWeight: 650,
+          padding: '16px 0',
+          borderRadius: 999,
           marginTop: 6,
           opacity: submitting ? 0.6 : 1,
+          boxShadow: '0 0 34px rgba(255,255,255,0.12)',
         }}
       >
         {submitting ? 'Sending…' : 'Send Message'}
@@ -1820,9 +2482,9 @@ function CTA() {
         position: 'relative',
         overflow: 'hidden',
         padding: `${PAD}px 28px`,
-        background: '#000000',
         borderTop: `1px solid ${C.border}`,
         borderBottom: `1px solid ${C.border}`,
+        zIndex: 1,
       }}
     >
       {/* Centered white glow */}
@@ -1833,7 +2495,7 @@ function CTA() {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(ellipse 60% 80% at 50% 50%, rgba(255, 255, 255,0.08) 0%, transparent 60%)',
+            'radial-gradient(ellipse 60% 80% at 50% 50%, rgba(255,255,255,0.09) 0%, transparent 60%)',
         }}
       />
       {/* Giant watermark */}
@@ -1846,8 +2508,9 @@ function CTA() {
           left: '50%',
           transform: 'translate(-50%, -50%)',
           fontWeight: 900,
-          color: 'rgba(255, 255, 255,0.04)',
-          letterSpacing: '-10px',
+          color: 'transparent',
+          WebkitTextStroke: '1px rgba(255,255,255,0.05)',
+          letterSpacing: '-8px',
           lineHeight: 1,
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
@@ -1869,23 +2532,31 @@ function CTA() {
         <Reveal>
           <h2
             style={{
-              fontSize: 46,
-              fontWeight: 700,
+              fontSize: 'clamp(36px, 5.4vw, 62px)',
+              fontWeight: 750,
               color: C.text,
-              letterSpacing: '-0.03em',
-              lineHeight: 1.12,
-              marginBottom: 20,
+              letterSpacing: '-0.04em',
+              lineHeight: 1.08,
+              marginBottom: 22,
             }}
           >
-            Ready to build on solid systems?
+            Ready to build on{' '}
+            <span
+              style={{
+                color: 'transparent',
+                WebkitTextStroke: '1.4px rgba(255,255,255,0.9)',
+              }}
+            >
+              solid systems?
+            </span>
           </h2>
           <p
             style={{
               fontSize: 18,
               color: C.muted,
               maxWidth: 560,
-              margin: '0 auto 36px',
-              lineHeight: 1.6,
+              margin: '0 auto 38px',
+              lineHeight: 1.65,
             }}
           >
             Book a free strategy call and we’ll map out exactly what your
@@ -1902,9 +2573,10 @@ function CTA() {
               color: C.bg,
               fontSize: 16,
               fontWeight: 650,
-              padding: '17px 38px',
-              borderRadius: 12,
+              padding: '18px 42px',
+              borderRadius: 999,
               letterSpacing: '-0.01em',
+              boxShadow: '0 0 50px rgba(255,255,255,0.2)',
             }}
           >
             Book Strategy Call
@@ -1926,7 +2598,7 @@ function CTA() {
    ============================================================ */
 function Footer() {
   return (
-    <footer style={{ position: 'relative' }}>
+    <footer style={{ position: 'relative', zIndex: 1, overflow: 'hidden' }}>
       {/* Animated gradient line at very top */}
       <div
         aria-hidden
@@ -1943,7 +2615,7 @@ function Footer() {
         style={{
           position: 'relative',
           zIndex: 1,
-          padding: '70px 28px 50px',
+          padding: '76px 28px 40px',
           maxWidth: MAXW,
           margin: '0 auto',
         }}
@@ -1988,7 +2660,7 @@ function Footer() {
                 style={{
                   fontWeight: 300,
                   fontSize: 16,
-                  color: 'rgba(255, 255, 255,0.6)',
+                  color: 'rgba(255,255,255,0.6)',
                   letterSpacing: '-0.4px',
                 }}
               >
@@ -2013,22 +2685,24 @@ function Footer() {
                 rel="noreferrer"
                 aria-label="Instagram"
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 9,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 10,
                   border: `1px solid ${C.border}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: C.muted,
-                  transition: 'color 0.2s ease, border-color 0.2s ease',
+                  transition: 'all 0.25s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = C.accent
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255,0.4)'
+                  e.currentTarget.style.color = '#000'
+                  e.currentTarget.style.background = '#FFF'
+                  e.currentTarget.style.borderColor = '#FFF'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.color = C.muted
+                  e.currentTarget.style.background = 'transparent'
                   e.currentTarget.style.borderColor = C.border
                 }}
               >
@@ -2053,22 +2727,24 @@ function Footer() {
                 rel="noreferrer"
                 aria-label="LinkedIn"
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 9,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 10,
                   border: `1px solid ${C.border}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: C.muted,
-                  transition: 'color 0.2s ease, border-color 0.2s ease',
+                  transition: 'all 0.25s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = C.accent
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255,0.4)'
+                  e.currentTarget.style.color = '#000'
+                  e.currentTarget.style.background = '#FFF'
+                  e.currentTarget.style.borderColor = '#FFF'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.color = C.muted
+                  e.currentTarget.style.background = 'transparent'
                   e.currentTarget.style.borderColor = C.border
                 }}
               >
@@ -2084,76 +2760,99 @@ function Footer() {
             </div>
           </div>
 
-        <div>
-          <div
-            style={{
-              fontSize: 12.5,
-              color: C.accent,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              marginBottom: 18,
-              fontWeight: 600,
-            }}
-          >
-            Services
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                color: C.accent,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                marginBottom: 18,
+                fontWeight: 650,
+              }}
+            >
+              Services
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {SERVICES.map((s) => (
+                <a
+                  key={s.title}
+                  href="#services"
+                  style={{ fontSize: 14.5, color: C.muted, transition: 'color 0.2s ease' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+                >
+                  {s.title}
+                </a>
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {SERVICES.map((s) => (
+
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                color: C.accent,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                marginBottom: 18,
+                fontWeight: 650,
+              }}
+            >
+              Contact
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <a
-                key={s.title}
-                href="#services"
-                style={{ fontSize: 14.5, color: C.muted }}
+                href="mailto:hello@lithoslabs.com"
+                style={{ fontSize: 14.5, color: C.muted, transition: 'color 0.2s ease' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
               >
-                {s.title}
+                hello@lithoslabs.com
               </a>
-            ))}
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: 14.5, color: C.muted, transition: 'color 0.2s ease' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+              >
+                Instagram
+              </a>
+              <span style={{ fontSize: 14.5, color: C.muted }}>Aruba</span>
+            </div>
           </div>
         </div>
 
-        <div>
-          <div
-            style={{
-              fontSize: 12.5,
-              color: C.accent,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              marginBottom: 18,
-              fontWeight: 600,
-            }}
-          >
-            Contact
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <a
-              href="mailto:hello@lithoslabs.com"
-              style={{ fontSize: 14.5, color: C.muted }}
-            >
-              hello@lithoslabs.com
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              style={{ fontSize: 14.5, color: C.muted }}
-            >
-              Instagram
-            </a>
-            <span style={{ fontSize: 14.5, color: C.muted }}>Aruba</span>
-          </div>
+        <div
+          style={{
+            paddingTop: 28,
+            fontSize: 13,
+            color: C.muted,
+            textAlign: 'center',
+          }}
+        >
+          © 2026 Lithos Labs. All rights reserved.
         </div>
-      </div>
 
-      <div
-        style={{
-          paddingTop: 28,
-          fontSize: 13,
-          color: C.muted,
-          textAlign: 'center',
-        }}
-      >
-        © 2026 Lithos Labs. All rights reserved.
+        {/* Giant outlined wordmark */}
+        <div
+          aria-hidden
+          className="lithos-footer-wordmark"
+          style={{
+            marginTop: 34,
+            textAlign: 'center',
+            fontWeight: 900,
+            lineHeight: 0.82,
+            letterSpacing: '-0.03em',
+            color: 'transparent',
+            WebkitTextStroke: '1px rgba(255,255,255,0.08)',
+            userSelect: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          LITHOS LABS
         </div>
       </div>
     </footer>
@@ -2210,7 +2909,7 @@ function LoadingScreen() {
   const [show, setShow] = useState(true)
 
   useEffect(() => {
-    const t = setTimeout(() => setShow(false), 1200)
+    const t = setTimeout(() => setShow(false), 1400)
     return () => clearTimeout(t)
   }, [])
 
@@ -2227,12 +2926,14 @@ function LoadingScreen() {
             zIndex: 9999,
             background: C.bg,
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
+            gap: 22,
           }}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.88 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
@@ -2247,8 +2948,28 @@ function LoadingScreen() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M28 22 C42 12, 66 14, 78 30 C88 44, 86 66, 70 78 C54 90, 30 86, 19 70 C9 55, 14 32, 28 22 Z" />
+              <motion.path
+                d="M28 22 C42 12, 66 14, 78 30 C88 44, 86 66, 70 78 C54 90, 30 86, 19 70 C9 55, 14 32, 28 22 Z"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, ease: 'easeInOut' }}
+              />
             </svg>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            style={{
+              fontSize: 13,
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              color: C.muted,
+              fontWeight: 600,
+              paddingLeft: '0.4em',
+            }}
+          >
+            Lithos Labs
           </motion.div>
         </motion.div>
       )}
@@ -2302,8 +3023,8 @@ function CookieNotice() {
             alignItems: 'center',
             gap: 16,
             padding: '14px 18px',
-            borderRadius: 12,
-            background: 'rgba(20, 20, 20,0.92)',
+            borderRadius: 14,
+            background: 'rgba(14,14,14,0.9)',
             backdropFilter: 'blur(14px)',
             WebkitBackdropFilter: 'blur(14px)',
             border: `1px solid ${C.border}`,
@@ -2323,7 +3044,7 @@ function CookieNotice() {
               fontSize: 13,
               fontWeight: 600,
               padding: '9px 18px',
-              borderRadius: 8,
+              borderRadius: 999,
             }}
           >
             Accept
@@ -2331,24 +3052,6 @@ function CookieNotice() {
         </motion.div>
       )}
     </AnimatePresence>
-  )
-}
-
-/* ============================================================
-   SECTION DIVIDER — gradient fade
-   ============================================================ */
-function Divider() {
-  return (
-    <div
-      aria-hidden
-      style={{
-        height: 1,
-        width: '60%',
-        margin: '0 auto',
-        background:
-          'linear-gradient(90deg, transparent, rgba(255, 255, 255,0.15), transparent)',
-      }}
-    />
   )
 }
 
@@ -2373,13 +3076,13 @@ function CursorGlow() {
         position: 'fixed',
         left: pos.x,
         top: pos.y,
-        width: 300,
-        height: 300,
+        width: 340,
+        height: 340,
         borderRadius: '50%',
         background:
-          'radial-gradient(circle, rgba(255, 255, 255,0.06) 0%, transparent 70%)',
+          'radial-gradient(circle, rgba(255,255,255,0.055) 0%, transparent 70%)',
         pointerEvents: 'none',
-        zIndex: 9999,
+        zIndex: 9998,
         transform: 'translate(-50%, -50%)',
         transition: 'left 0.1s, top 0.1s',
       }}
@@ -2392,20 +3095,13 @@ function CursorGlow() {
    ============================================================ */
 export default function App() {
   return (
-    <div style={{ background: C.bg, color: C.text, fontFamily: FONT }}>
+    <div style={{ background: C.bg, color: C.text, fontFamily: FONT, position: 'relative' }}>
       <style>{`
-        .lithos-hero-grid {
-          animation: lithosGridDrift 25s linear infinite;
-        }
-        @keyframes lithosGridDrift {
-          from { background-position: 0px 0px; }
-          to { background-position: 32px 32px; }
-        }
         .lithos-whatsapp .lithos-wa-tip {
           position: absolute;
           right: 70px;
-          background: ${C.text};
-          color: ${C.bg};
+          background: #FFFFFF;
+          color: #000000;
           font-size: 13px;
           font-weight: 600;
           padding: 8px 12px;
@@ -2420,11 +3116,22 @@ export default function App() {
           opacity: 1;
           transform: translateX(0);
         }
-        select option { color: ${C.text}; }
+        select option { color: #FFFFFF; }
         section[id] { scroll-margin-top: 86px; }
-        .lithos-cta-watermark { font-size: clamp(80px, 15vw, 180px); }
+        .lithos-cta-watermark { font-size: clamp(90px, 16vw, 200px); }
+        .lithos-footer-wordmark { font-size: clamp(64px, 11.5vw, 168px); }
+        .lithos-marquee-track {
+          display: inline-flex;
+          white-space: nowrap;
+          animation: lithosMarquee 30s linear infinite;
+          will-change: transform;
+        }
+        @keyframes lithosMarquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
         .lithos-footer-line {
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255,0.45), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
           background-size: 50% 100%;
           background-repeat: no-repeat;
           animation: lithosFooterLine 6s linear infinite;
@@ -2432,6 +3139,9 @@ export default function App() {
         @keyframes lithosFooterLine {
           0% { background-position: -50% 0; }
           100% { background-position: 150% 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .lithos-marquee-track, .lithos-footer-line { animation: none !important; }
         }
         @media (hover: none), (pointer: coarse) {
           .lithos-cursor-glow { display: none !important; }
@@ -2442,33 +3152,48 @@ export default function App() {
           .lithos-services-grid { grid-template-columns: 1fr !important; }
           .lithos-pricing-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
           .lithos-testimonials-grid { grid-template-columns: 1fr !important; }
-          .lithos-why-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
-          .lithos-steps { grid-template-columns: 1fr !important; gap: 40px !important; }
+          .lithos-work-grid { grid-template-columns: 1fr !important; }
+          .lithos-why-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+          .lithos-steps { grid-template-columns: 1fr !important; gap: 48px !important; }
           .lithos-steps-line { display: none !important; }
-          .lithos-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 36px 20px !important; }
+          .lithos-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 38px 20px !important; }
+          .lithos-stat-cell { border-left: none !important; padding-left: 0 !important; }
           .lithos-footer-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
           .lithos-form-row { grid-template-columns: 1fr !important; }
-          .lithos-section { padding-top: 40px !important; padding-bottom: 40px !important; }
+          .lithos-section { padding-top: 64px !important; padding-bottom: 64px !important; }
           .lithos-cookie { left: 12px; right: 12px; max-width: none; }
         }
       `}</style>
+
+      {/* Noise texture overlay — whole page */}
+      <div
+        aria-hidden
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 2,
+          opacity: 0.35,
+          pointerEvents: 'none',
+          background:
+            'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.03\'/%3E%3C/svg%3E")',
+        }}
+      />
+
+      <ParticleNetwork />
+      <ScrollProgress />
       <LoadingScreen />
       <CursorGlow />
       <Nav />
-      <main>
+      <main style={{ position: 'relative', zIndex: 1 }}>
         <Hero />
+        <Marquee />
         <Services />
-        <Divider />
         <Pricing />
-        <Divider />
         <HowItWorks />
-        <Divider />
         <WhyLithos />
-        <Divider />
+        <OurWork />
         <Stats />
-        <Divider />
         <Testimonials />
-        <Divider />
         <CTA />
       </main>
       <Footer />
