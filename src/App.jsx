@@ -1270,48 +1270,225 @@ function CheckIcon({ dark }) {
 
 const PLANS = [
   {
-    name: 'Starter',
-    price: 'From $500',
-    best: 'Small businesses getting started',
+    name: 'Landing Page',
+    price: 'Afl. 1,500',
+    per: 'one-time',
+    best: 'A professional website that converts visitors into customers',
     features: [
-      'CRM Setup',
-      'Lead tracking pipeline',
-      'Basic automations',
-      '30-day support',
+      'Custom 4–5 page website',
+      'Mobile responsive + SEO ready',
+      'WhatsApp, Maps & contact forms',
+      'Domain, hosting & SSL (first year)',
+      '30 days of support included',
     ],
     cta: 'Get Started',
     popular: false,
   },
   {
-    name: 'Growth',
-    price: 'From $1,500',
-    best: 'Growing businesses ready to scale',
+    name: 'Landing Page + CRM',
+    price: 'Afl. 3,500',
+    per: 'one-time',
+    best: 'Your website plus the system that runs your business',
     features: [
-      'Everything in Starter',
-      'AI Marketing System',
-      'Content generation',
-      'Social media automation',
-      'Monthly strategy call',
+      'Everything in Landing Page',
+      'Booking / CRM system',
+      'Owner admin dashboard',
+      'Automated email flows',
+      'Lead capture pipeline',
     ],
     cta: 'Get Started',
     popular: true,
   },
   {
-    name: 'Full System',
-    price: 'From $3,000',
-    best: 'Businesses ready for full transformation',
+    name: 'AI Marketing',
+    price: 'Afl. 450',
+    per: '/month',
+    best: 'AI-powered content that markets your brand 24/7',
     features: [
-      'Everything in Growth',
-      'Custom website',
-      'Lead generation system',
-      'Brand identity',
-      'Dedicated account manager',
-      'Bi-weekly strategy calls',
+      'AI content generation',
+      'Social media scheduling',
+      'Brand-voice AI',
+      'Monthly content calendar',
+      'Performance reports',
     ],
-    cta: 'Book a Call',
+    cta: 'Get Started',
     popular: false,
   },
+  {
+    name: 'Automation Systems',
+    price: 'Afl. 700',
+    per: '/month',
+    best: 'Everything automated — all included, end to end',
+    features: [
+      'Funnels & email systems',
+      'Appointment booking automations',
+      'Integrations wired together',
+      'Site care: hosting, SSL, backups',
+      'Priority support',
+    ],
+    cta: 'Get Started',
+    popular: false,
+  },
+  {
+    name: 'Full Package',
+    price: 'Custom',
+    per: 'tailored to you',
+    best: 'Website, CRM, AI marketing and automations — the whole system',
+    features: [
+      'Everything Lithos Labs builds',
+      'Full automation stack',
+      'Dedicated management',
+      'Quarterly strategy calls',
+      'Built around your business',
+    ],
+    cta: 'Contact for a Quote',
+    popular: false,
+    quote: true,
+  },
 ]
+
+function PricingCard({ p, onCta }) {
+  const dark = p.popular
+  return (
+    <motion.div
+      className="lithos-pricing-card"
+      whileHover={{ y: -10, rotate: -1.2, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      style={{
+        position: 'relative',
+        width: 330,
+        flexShrink: 0,
+        marginRight: 22,
+        background: dark ? '#FFFFFF' : C.card,
+        border: dark ? '1px solid #FFFFFF' : `1px solid ${C.border}`,
+        borderRadius: 20,
+        padding: 32,
+        display: 'flex',
+        flexDirection: 'column',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+        boxShadow: dark ? '0 24px 80px rgba(255,255,255,0.14)' : 'none',
+      }}
+    >
+      {p.popular && (
+        <div
+          style={{
+            position: 'absolute',
+            top: -13,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#000000',
+            color: '#FFFFFF',
+            border: '1px solid rgba(255,255,255,0.3)',
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            padding: '6px 16px',
+            borderRadius: 999,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Most Popular
+        </div>
+      )}
+      <h3
+        style={{
+          fontSize: 18.5,
+          fontWeight: 650,
+          color: dark ? '#000' : C.text,
+          letterSpacing: '-0.02em',
+          marginBottom: 12,
+        }}
+      >
+        {p.name}
+      </h3>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: 8,
+          marginBottom: 7,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 28,
+            fontWeight: 750,
+            color: dark ? '#000' : C.accent,
+            letterSpacing: '-0.035em',
+          }}
+        >
+          {p.quote ? p.price : `From ${p.price}`}
+        </span>
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: dark ? 'rgba(0,0,0,0.55)' : C.muted,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {p.per}
+        </span>
+      </div>
+      <p
+        style={{
+          fontSize: 14,
+          color: dark ? 'rgba(0,0,0,0.6)' : C.muted,
+          lineHeight: 1.5,
+          marginBottom: 24,
+        }}
+      >
+        {p.best}
+      </p>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          marginBottom: 28,
+          flex: 1,
+        }}
+      >
+        {p.features.map((f) => (
+          <div
+            key={f}
+            style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}
+          >
+            <CheckIcon dark={dark} />
+            <span
+              style={{
+                fontSize: 14,
+                color: dark ? 'rgba(0,0,0,0.82)' : C.text,
+                opacity: dark ? 1 : 0.82,
+                lineHeight: 1.45,
+              }}
+            >
+              {f}
+            </span>
+          </div>
+        ))}
+      </div>
+      <PressButton
+        onClick={onCta}
+        style={{
+          width: '100%',
+          background: dark ? '#000000' : 'transparent',
+          color: dark ? '#FFFFFF' : C.accent,
+          border: dark ? 'none' : `1px solid ${C.borderStrong}`,
+          fontSize: 14.5,
+          fontWeight: 650,
+          padding: '14px 0',
+          borderRadius: 999,
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {p.cta}
+      </PressButton>
+    </motion.div>
+  )
+}
 
 function Pricing() {
   const scrollToContact = () =>
@@ -1319,164 +1496,60 @@ function Pricing() {
       .getElementById('contact-form-anchor')
       ?.scrollIntoView({ behavior: 'smooth' })
 
+  const renderSet = (suffix, hidden) => (
+    <div
+      aria-hidden={hidden || undefined}
+      style={{ display: 'flex', alignItems: 'stretch' }}
+    >
+      {PLANS.map((p) => (
+        <PricingCard key={`${p.name}-${suffix}`} p={p} onCta={scrollToContact} />
+      ))}
+    </div>
+  )
+
   return (
     <section
       id="pricing"
       className="lithos-section"
-      style={{ position: 'relative', padding: `${PAD}px 28px`, zIndex: 1 }}
+      style={{ position: 'relative', padding: `${PAD}px 0`, zIndex: 1 }}
     >
-      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
+      <div style={{ maxWidth: MAXW, margin: '0 auto', padding: '0 28px' }}>
         <Reveal>
           <SectionHeader
             num="02"
             kicker="Pricing"
             title="Simple, transparent pricing"
-            sub="Choose the package that fits your business."
+            sub="Pick a system — the cards keep rolling, hover to pause. All prices in Aruban florin."
           />
         </Reveal>
+      </div>
+      <Reveal>
         <div
-          className="lithos-pricing-grid"
+          className="lithos-pricing-marquee"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 22,
+            position: 'relative',
+            overflow: 'hidden',
             marginTop: 64,
-            alignItems: 'stretch',
+            padding: '24px 0 12px',
           }}
         >
-          {PLANS.map((p, i) => {
-            const dark = p.popular
-            return (
-              <Reveal key={p.name} delay={i * 0.1} style={{ height: '100%' }}>
-                <motion.div
-                  whileHover={{ y: -8 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                  style={{
-                    position: 'relative',
-                    background: dark ? '#FFFFFF' : C.card,
-                    border: dark
-                      ? '1px solid #FFFFFF'
-                      : `1px solid ${C.border}`,
-                    borderRadius: 20,
-                    padding: 36,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    backdropFilter: 'blur(6px)',
-                    WebkitBackdropFilter: 'blur(6px)',
-                    boxShadow: dark
-                      ? '0 24px 80px rgba(255,255,255,0.14)'
-                      : 'none',
-                  }}
-                >
-                  {p.popular && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: -13,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: '#000000',
-                        color: '#FFFFFF',
-                        border: '1px solid rgba(255,255,255,0.3)',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
-                        padding: '6px 16px',
-                        borderRadius: 999,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Most Popular
-                    </div>
-                  )}
-                  <h3
-                    style={{
-                      fontSize: 19,
-                      fontWeight: 650,
-                      color: dark ? '#000' : C.text,
-                      letterSpacing: '-0.02em',
-                      marginBottom: 12,
-                    }}
-                  >
-                    {p.name}
-                  </h3>
-                  <div
-                    style={{
-                      fontSize: 38,
-                      fontWeight: 750,
-                      color: dark ? '#000' : C.accent,
-                      letterSpacing: '-0.035em',
-                      marginBottom: 7,
-                    }}
-                  >
-                    {p.price}
-                  </div>
-                  <p
-                    style={{
-                      fontSize: 14,
-                      color: dark ? 'rgba(0,0,0,0.6)' : C.muted,
-                      lineHeight: 1.5,
-                      marginBottom: 28,
-                    }}
-                  >
-                    {p.best}
-                  </p>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 13,
-                      marginBottom: 32,
-                      flex: 1,
-                    }}
-                  >
-                    {p.features.map((f) => (
-                      <div
-                        key={f}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: 11,
-                        }}
-                      >
-                        <CheckIcon dark={dark} />
-                        <span
-                          style={{
-                            fontSize: 14.5,
-                            color: dark ? 'rgba(0,0,0,0.82)' : C.text,
-                            opacity: dark ? 1 : 0.82,
-                            lineHeight: 1.45,
-                          }}
-                        >
-                          {f}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <PressButton
-                    onClick={scrollToContact}
-                    style={{
-                      width: '100%',
-                      background: dark ? '#000000' : 'transparent',
-                      color: dark ? '#FFFFFF' : C.accent,
-                      border: dark ? 'none' : `1px solid ${C.borderStrong}`,
-                      fontSize: 15,
-                      fontWeight: 650,
-                      padding: '15px 0',
-                      borderRadius: 999,
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    {p.cta}
-                  </PressButton>
-                </motion.div>
-              </Reveal>
-            )
-          })}
+          <div className="lithos-pricing-track">
+            {renderSet('a', false)}
+            {renderSet('b', true)}
+          </div>
+          {/* Edge fades */}
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              background:
+                'linear-gradient(90deg, #000 0%, transparent 6%, transparent 94%, #000 100%)',
+            }}
+          />
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }
@@ -3071,6 +3144,21 @@ export default function App() {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }
         }
+        .lithos-pricing-track {
+          display: inline-flex;
+          animation: lithosMarquee 45s linear infinite;
+          will-change: transform;
+        }
+        .lithos-pricing-marquee:hover .lithos-pricing-track {
+          animation-play-state: paused;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .lithos-pricing-track { animation: none !important; flex-wrap: wrap; justify-content: center; }
+        }
+        @media (max-width: 860px) {
+          .lithos-pricing-card { width: 290px !important; padding: 26px !important; }
+          .lithos-pricing-track { animation-duration: 35s; }
+        }
         .lithos-footer-line {
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
           background-size: 50% 100%;
@@ -3091,7 +3179,6 @@ export default function App() {
           .lithos-desktop-nav { display: none !important; }
           .lithos-hamburger { display: flex !important; }
           .lithos-services-grid { grid-template-columns: 1fr !important; }
-          .lithos-pricing-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
           .lithos-testimonials-grid { grid-template-columns: 1fr !important; }
           .lithos-work-grid { grid-template-columns: 1fr !important; }
           .lithos-why-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
