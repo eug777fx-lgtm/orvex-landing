@@ -2702,12 +2702,12 @@ function Footer() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <a
-                href="mailto:hello@lithoslabs.com"
+                href="mailto:eug777fx@gmail.com"
                 style={{ fontSize: 14.5, color: C.muted, transition: 'color 0.2s ease' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
               >
-                hello@lithoslabs.com
+                eug777fx@gmail.com
               </a>
               <a
                 href="https://instagram.com"
