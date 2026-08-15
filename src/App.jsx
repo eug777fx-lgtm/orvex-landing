@@ -659,7 +659,7 @@ function Hero() {
           // On portrait phones a 16:9 'cover' crop blows the stone up huge —
           // 'contain' keeps it smaller and centered (letterbox is invisible on black)
           objectFit: isMobile ? 'contain' : 'cover',
-          transform: isMobile ? 'scale(2.2)' : 'none',
+          transform: isMobile ? 'scale(2.2) translateX(5%)' : 'none',
           opacity: isMobile ? 0.5 : 0.55,
           filter: 'grayscale(1) brightness(1.15)',
           pointerEvents: 'none',
