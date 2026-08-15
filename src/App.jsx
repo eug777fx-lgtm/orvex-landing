@@ -983,47 +983,45 @@ function Hero() {
 }
 
 /* ============================================================
-   MARQUEE — scrolling capability strip
+   BRAND MARQUEE — rolling banner of client logos
    ============================================================ */
-const MARQUEE_ITEMS = [
-  'CRM Systems',
-  'AI Automation',
-  'Web Development',
-  'Growth Engines',
-  'Lead Generation',
-  'Content Infrastructure',
+const BRANDS = [
+  { name: 'Island Fades', src: '/clients/island-fades.png', h: 58 },
+  { name: 'AWATEC', src: '/clients/awatec.png', h: 30 },
+  { name: 'LIMITLESS', src: '/clients/limitless.png', h: 52 },
 ]
 
 function Marquee() {
-  const row = MARQUEE_ITEMS.map((t, i) => (
+  // Repeat the brand set so the strip stays dense
+  const items = [...BRANDS, ...BRANDS, ...BRANDS]
+  const row = items.map((b, i) => (
     <span
-      key={`${t}-${i}`}
+      key={`${b.name}-${i}`}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 34,
-        marginRight: 34,
+        gap: 64,
+        marginRight: 64,
       }}
     >
-      <span
+      <img
+        src={b.src}
+        alt={b.name}
+        loading="lazy"
         style={{
-          fontSize: 15,
-          fontWeight: 650,
-          letterSpacing: '0.22em',
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.5)',
-          whiteSpace: 'nowrap',
+          height: b.h,
+          width: 'auto',
+          opacity: 0.85,
+          objectFit: 'contain',
         }}
-      >
-        {t}
-      </span>
+      />
       <span
         aria-hidden
         style={{
           width: 5,
           height: 5,
           borderRadius: '50%',
-          background: 'rgba(255,255,255,0.35)',
+          background: 'rgba(255,255,255,0.3)',
           flexShrink: 0,
         }}
       />
@@ -1032,31 +1030,50 @@ function Marquee() {
 
   return (
     <div
-      aria-hidden
       style={{
         position: 'relative',
-        overflow: 'hidden',
         borderTop: `1px solid ${C.border}`,
         borderBottom: `1px solid ${C.border}`,
-        padding: '22px 0',
         background: 'rgba(255,255,255,0.015)',
         zIndex: 1,
       }}
     >
-      <div className="lithos-marquee-track">
-        {row}
-        {row}
-      </div>
-      {/* Edge fades */}
       <div
         style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          background:
-            'linear-gradient(90deg, #000 0%, transparent 12%, transparent 88%, #000 100%)',
+          textAlign: 'center',
+          paddingTop: 26,
+          fontSize: 11,
+          letterSpacing: '0.26em',
+          textTransform: 'uppercase',
+          color: C.faint,
+          fontWeight: 650,
         }}
-      />
+      >
+        Brands we&rsquo;ve worked with
+      </div>
+      <div
+        aria-hidden
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          padding: '24px 0 28px',
+        }}
+      >
+        <div className="lithos-marquee-track" style={{ alignItems: 'center' }}>
+          {row}
+          {row}
+        </div>
+        {/* Edge fades */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background:
+              'linear-gradient(90deg, #000 0%, transparent 12%, transparent 88%, #000 100%)',
+          }}
+        />
+      </div>
     </div>
   )
 }
@@ -1840,28 +1857,22 @@ function WhyLithos() {
    ============================================================ */
 const WORK_ITEMS = [
   {
-    industry: 'Fashion & Retail',
-    name: 'NOVA Streetwear',
-    desc: 'Editorial e-commerce concept with bold typography, product drops, and lookbook.',
-    href: '/demos/clothing',
+    industry: 'Barbershop — Aruba',
+    name: 'Island Fades Elite',
+    desc: 'Full booking website for Aruba’s Island Fades barbershop — services, barbers, and online appointments.',
+    href: 'https://islandfadeselite.com/',
   },
   {
-    industry: 'Luxury & Jewelry',
-    name: 'Aurelia Fine Jewelry',
-    desc: 'High-end atelier site with collections, craftsmanship story, and private appointments.',
-    href: '/demos/jewelry',
+    industry: 'Leak Detection & Plumbing — Aruba',
+    name: 'AWATEC',
+    desc: 'Service booking platform for AWATEC’s leak detection and plumbing operation, wired into their CRM and automations.',
+    href: 'https://awatec-hq.vercel.app/',
   },
   {
-    industry: 'Food & Beverage',
-    name: 'Brew & Co. Aruba',
-    desc: 'Cozy coffee shop site with full menu in AWG, location, and opening hours.',
-    href: '/demos/coffee',
-  },
-  {
-    industry: 'Construction',
-    name: 'Titan Construction Aruba',
-    desc: 'Industrial contractor site with services, project stats, and instant quote form.',
-    href: '/demos/construction',
+    industry: 'Trading SaaS',
+    name: 'LIMITLESS Journal',
+    desc: 'A full trading journal platform — analytics dashboards, trade logging, and a social layer for traders.',
+    href: 'https://www.limitless-journal.com/',
   },
 ]
 
@@ -1960,7 +1971,7 @@ function WorkCard({ w, index }) {
           transition: 'transform 0.3s ease, color 0.35s ease',
         }}
       >
-        View Live Demo <Icon name="arrow" />
+        Visit Live Site <Icon name="arrow" />
       </div>
     </motion.a>
   )
@@ -1979,14 +1990,14 @@ function OurWork() {
             num="05"
             kicker="Portfolio"
             title="Our work"
-            sub="Explore live demos built by Lithos Labs."
+            sub="Real systems, live in production — built by Lithos Labs."
           />
         </Reveal>
         <div
           className="lithos-work-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
+            gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 22,
             marginTop: 64,
           }}
