@@ -607,6 +607,26 @@ const HERO_VIDEO =
 function Hero() {
   const isMobile = useIsMobile()
 
+  // iOS/low-power mode can block autoplay and show a pause overlay.
+  // Kick playback on mount and again on the first touch/click.
+  useEffect(() => {
+    const kick = () => {
+      const v = document.querySelector('#hero video')
+      if (v && v.paused) {
+        v.muted = true
+        const p = v.play()
+        if (p && p.catch) p.catch(() => {})
+      }
+    }
+    kick()
+    window.addEventListener('touchstart', kick, { passive: true })
+    window.addEventListener('click', kick)
+    return () => {
+      window.removeEventListener('touchstart', kick)
+      window.removeEventListener('click', kick)
+    }
+  }, [])
+
   const line1 = 'Building the Foundation'
   const line2 = 'Behind Scalable Brands'
 
@@ -648,7 +668,18 @@ function Hero() {
         muted
         loop
         playsInline
+        controls={false}
+        disablePictureInPicture
         preload="auto"
+        // React doesn't always render the muted attribute — set it imperatively
+        // so iOS treats this as a muted video and allows autoplay
+        ref={(el) => {
+          if (el) {
+            el.muted = true
+            el.defaultMuted = true
+            el.setAttribute('webkit-playsinline', '')
+          }
+        }}
         src={HERO_VIDEO}
         onError={(e) => (e.currentTarget.style.display = 'none')}
         style={{
@@ -1515,6 +1546,79 @@ function Pricing() {
       .getElementById('contact-form-anchor')
       ?.scrollIntoView({ behavior: 'smooth' })
 
+  const trackRef = useRef(null)
+  const s = useRef({
+    x: 0,
+    setW: 0,
+    hovered: false,
+    dragging: false,
+    lastT: 0,
+    lastPX: 0,
+    moved: 0,
+  })
+
+  // Auto-slide loop driven by rAF so touch/drag can take over at any time
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+    const st = s.current
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const SPEED = 42 // px per second
+
+    const measure = () => {
+      st.setW = track.scrollWidth / 2
+    }
+    measure()
+    window.addEventListener('resize', measure)
+
+    let raf
+    const step = (t) => {
+      if (!st.lastT) st.lastT = t
+      const dt = Math.min((t - st.lastT) / 1000, 0.05)
+      st.lastT = t
+      if (!st.dragging && !st.hovered && !reduced) {
+        st.x -= SPEED * dt
+      }
+      if (st.setW > 0) {
+        while (st.x <= -st.setW) st.x += st.setW
+        while (st.x > 0) st.x -= st.setW
+      }
+      track.style.transform = `translate3d(${st.x}px, 0, 0)`
+      raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
+
+  const onPointerDown = (e) => {
+    const st = s.current
+    st.dragging = true
+    st.moved = 0
+    st.lastPX = e.clientX
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+  }
+  const onPointerMove = (e) => {
+    const st = s.current
+    if (!st.dragging) return
+    const dx = e.clientX - st.lastPX
+    st.x += dx
+    st.moved += Math.abs(dx)
+    st.lastPX = e.clientX
+  }
+  const endDrag = () => {
+    s.current.dragging = false
+  }
+  const onClickCapture = (e) => {
+    // If the user was dragging, don't fire button clicks on release
+    if (s.current.moved > 8) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
   const renderSet = (suffix, hidden) => (
     <div
       aria-hidden={hidden || undefined}
@@ -1538,21 +1642,37 @@ function Pricing() {
             num="02"
             kicker="Pricing"
             title="Simple, transparent pricing"
-            sub="Pick a system — the cards keep rolling, hover to pause. All prices in Aruban florin."
+            sub="Pick a system — grab the cards to slide through them. All prices in Aruban florin."
           />
         </Reveal>
       </div>
       <Reveal>
         <div
           className="lithos-pricing-marquee"
+          onMouseEnter={() => (s.current.hovered = true)}
+          onMouseLeave={() => {
+            s.current.hovered = false
+            endDrag()
+          }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onClickCapture={onClickCapture}
           style={{
             position: 'relative',
             overflow: 'hidden',
             marginTop: 64,
             padding: '24px 0 12px',
+            touchAction: 'pan-y',
+            cursor: 'grab',
           }}
         >
-          <div className="lithos-pricing-track">
+          <div
+            ref={trackRef}
+            className="lithos-pricing-track"
+            style={{ display: 'inline-flex', willChange: 'transform' }}
+          >
             {renderSet('a', false)}
             {renderSet('b', true)}
           </div>
@@ -1884,7 +2004,7 @@ const WORK_ITEMS = [
     industry: 'Leak Detection & Plumbing — Aruba',
     name: 'AWATEC',
     desc: 'Service booking platform for AWATEC’s leak detection and plumbing operation, wired into their CRM and automations.',
-    href: 'https://awatec-hq.vercel.app/',
+    href: 'https://www.awatecaruba.com/',
   },
   {
     industry: 'Trading SaaS',
@@ -3150,6 +3270,13 @@ export default function App() {
           transform: translateX(0);
         }
         select option { color: #FFFFFF; }
+        #hero video::-webkit-media-controls,
+        #hero video::-webkit-media-controls-start-playback-button,
+        #hero video::-webkit-media-controls-overlay-play-button {
+          display: none !important;
+          -webkit-appearance: none !important;
+          opacity: 0 !important;
+        }
         section[id] { scroll-margin-top: 86px; }
         .lithos-cta-watermark { font-size: clamp(90px, 16vw, 200px); }
         .lithos-footer-wordmark { font-size: clamp(64px, 11.5vw, 168px); }
@@ -3163,20 +3290,11 @@ export default function App() {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }
         }
-        .lithos-pricing-track {
-          display: inline-flex;
-          animation: lithosMarquee 45s linear infinite;
-          will-change: transform;
-        }
-        .lithos-pricing-marquee:hover .lithos-pricing-track {
-          animation-play-state: paused;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .lithos-pricing-track { animation: none !important; flex-wrap: wrap; justify-content: center; }
-        }
+        .lithos-pricing-marquee:active { cursor: grabbing; }
+        .lithos-pricing-card { user-select: none; -webkit-user-select: none; }
+        .lithos-pricing-card img { -webkit-user-drag: none; }
         @media (max-width: 860px) {
           .lithos-pricing-card { width: 290px !important; padding: 26px !important; }
-          .lithos-pricing-track { animation-duration: 35s; }
         }
         .lithos-footer-line {
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
