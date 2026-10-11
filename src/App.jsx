@@ -373,6 +373,19 @@ const NAV_LINKS = [
   { label: 'About', href: '#how-it-works' },
 ]
 
+// "Book a call" buttons scroll to the on-page contact form (no external booking tool).
+function goToContact(e) {
+  e?.preventDefault?.()
+  // Let the mobile menu close before scrolling.
+  setTimeout(() => {
+    const el = document.getElementById('contact-form-anchor')
+    if (!el) return
+    // Offset for the fixed nav so the first form fields aren't hidden.
+    const y = el.getBoundingClientRect().top + window.scrollY - 96
+    window.scrollTo({ top: y, behavior: 'smooth' })
+  }, 60)
+}
+
 function Nav() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -464,11 +477,7 @@ function Nav() {
               {l.label}
             </a>
           ))}
-          <a
-            href="https://calendly.com/lithoslabs"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href="#contact-form-anchor" onClick={goToContact}>
             <PressButton
               style={{
                 background: C.accent,
@@ -570,10 +579,11 @@ function Nav() {
                 </a>
               ))}
               <a
-                href="https://calendly.com/lithoslabs"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
+                href="#contact-form-anchor"
+                onClick={(e) => {
+                  setOpen(false)
+                  goToContact(e)
+                }}
               >
                 <PressButton
                   style={{
@@ -846,11 +856,7 @@ function Hero() {
             marginBottom: 52,
           }}
         >
-          <a
-            href="https://calendly.com/lithoslabs"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href="#contact-form-anchor" onClick={goToContact}>
             <PressButton
               style={{
                 display: 'inline-flex',
