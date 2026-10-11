@@ -2472,16 +2472,24 @@ function ContactForm() {
     })
       .then(async (r) => {
         const d = await r.json().catch(() => ({}))
-        return r.ok && String(d.success) !== 'false'
+        return r.ok && (String(d.success) !== 'false' || /activat/i.test(d.message || ''))
       })
       .catch(() => false)
-    // 2) Save the booking as a lead in the CRM (best effort).
-    const crmReq = fetch('/api/booking', {
+    // 2) Save the booking in the CRM (Leads → Booked Calls), best effort.
+    const crmReq = fetch('https://app.lithoslabs.agency/api/workflow', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(f),
+      body: JSON.stringify({
+        action: 'book_call',
+        name: f.name,
+        company: f.business_name,
+        email: f.email,
+        phone: f.phone,
+        message: [f.service_needed && `Needs: ${f.service_needed}`, f.message].filter(Boolean).join('. '),
+        scheduled_time: '',
+      }),
     })
-      .then((r) => r.ok)
+      .then(async (r) => r.ok && (await r.json().catch(() => ({}))).success !== false)
       .catch(() => false)
     const [emailed, saved] = await Promise.all([emailReq, crmReq])
     if (emailed || saved) setSent(true)
