@@ -2413,6 +2413,8 @@ const SERVICE_OPTIONS = [
   'Not sure',
 ]
 
+const BOOKING_EMAIL = 'eug777fx@gmail.com'
+
 function ContactForm() {
   const [sent, setSent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -2421,9 +2423,11 @@ function ContactForm() {
     name: '',
     business_name: '',
     email: '',
+    phone: '',
     service_needed: '',
     message: '',
   })
+  const [honey, setHoney] = useState('')
 
   const update = (key) => (e) =>
     setFormData((prev) => ({ ...prev, [key]: e.target.value }))
@@ -2445,25 +2449,43 @@ function ContactForm() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (honey) return // bot filled the hidden field
     setSubmitting(true)
     setError('')
-    try {
-      const res = await fetch('https://formspree.io/f/xqapwgqo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(formData),
+    const f = formData
+    // 1) Email notification to Lithos Labs (FormSubmit, no API key needed).
+    const emailReq = fetch(`https://formsubmit.co/ajax/${BOOKING_EMAIL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        _subject: `New call booking: ${f.name} (${f.business_name})`,
+        _template: 'table',
+        _replyto: f.email,
+        Name: f.name,
+        Business: f.business_name,
+        Email: f.email,
+        Phone: f.phone,
+        'Needs help with': f.service_needed,
+        Message: f.message || '(none)',
+        Source: 'lithoslabs.agency booking form',
+      }),
+    })
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}))
+        return r.ok && String(d.success) !== 'false'
       })
-      if (res.ok) {
-        setSent(true)
-      } else {
-        setError('Something went wrong — email us at hello@lithoslabs.com')
-      }
-    } catch {
-      setError('Something went wrong')
-    }
+      .catch(() => false)
+    // 2) Save the booking as a lead in the CRM (best effort).
+    const crmReq = fetch('/api/booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(f),
+    })
+      .then((r) => r.ok)
+      .catch(() => false)
+    const [emailed, saved] = await Promise.all([emailReq, crmReq])
+    if (emailed || saved) setSent(true)
+    else setError(`Something went wrong. Email us at ${BOOKING_EMAIL}`)
     setSubmitting(false)
   }
 
@@ -2568,17 +2590,44 @@ function ContactForm() {
           onBlur={(e) => (e.target.style.borderColor = C.border)}
         />
       </div>
+      <div
+        className="lithos-form-row"
+        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}
+      >
+        <input
+          style={inputStyle}
+          name="email"
+          type="email"
+          placeholder="Email address"
+          required
+          autoComplete="email"
+          value={formData.email}
+          onChange={update('email')}
+          onFocus={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.5)')}
+          onBlur={(e) => (e.target.style.borderColor = C.border)}
+        />
+        <input
+          style={inputStyle}
+          name="phone"
+          type="tel"
+          placeholder="Phone / WhatsApp"
+          required
+          autoComplete="tel"
+          value={formData.phone}
+          onChange={update('phone')}
+          onFocus={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.5)')}
+          onBlur={(e) => (e.target.style.borderColor = C.border)}
+        />
+      </div>
       <input
-        style={inputStyle}
-        name="email"
-        type="email"
-        placeholder="Email address"
-        required
-        autoComplete="email"
-        value={formData.email}
-        onChange={update('email')}
-        onFocus={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.5)')}
-        onBlur={(e) => (e.target.style.borderColor = C.border)}
+        type="text"
+        name="_honey"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        value={honey}
+        onChange={(e) => setHoney(e.target.value)}
+        style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
       />
       <select
         style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
