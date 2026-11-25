@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, useInView, AnimatePresence, useScroll, useSpring } from 'framer-motion'
+import { motion, useInView, AnimatePresence, useScroll, useSpring, useMotionValue } from 'framer-motion'
+import FoundationHero from './stone/FoundationHero.jsx'
+import { Tilt, ScrubText, useScrollProgress, useFinePointer } from './fx.jsx'
 
 /* ============================================================
    RESPONSIVE HOOK
@@ -33,7 +35,7 @@ const C = {
 }
 
 const FONT =
-  "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+  "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 const MAXW = 1180
 const PAD = 110
@@ -245,12 +247,30 @@ function Reveal({ children, delay = 0, y = 34, style }) {
    PRESS BUTTON — hover + tap spring feedback
    ============================================================ */
 function PressButton({ children, style, ...rest }) {
+  // magnetic: the button leans toward the cursor on desktop
+  const fine = useFinePointer()
+  const mx = useMotionValue(0)
+  const my = useMotionValue(0)
+  const x = useSpring(mx, { stiffness: 220, damping: 16, mass: 0.4 })
+  const y = useSpring(my, { stiffness: 220, damping: 16, mass: 0.4 })
+  const onMove = (e) => {
+    if (!fine) return
+    const r = e.currentTarget.getBoundingClientRect()
+    mx.set((e.clientX - (r.left + r.width / 2)) * 0.22)
+    my.set((e.clientY - (r.top + r.height / 2)) * 0.32)
+  }
+  const onLeave = () => {
+    mx.set(0)
+    my.set(0)
+  }
   return (
     <motion.button
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.96 }}
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-      style={style}
+      onPointerMove={onMove}
+      onPointerLeave={onLeave}
+      style={{ ...style, x, y }}
       {...rest}
     >
       {children}
@@ -426,10 +446,11 @@ function Nav() {
         <a href="#hero" aria-label="Lithos Labs home">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <img
-              src="/lithos-logo.png"
+              src="/lithos-mark-white.png"
               alt="Lithos Labs"
-              loading="lazy"
-              style={{ width: 26, height: 26, objectFit: 'contain' }}
+              width="34"
+              height="32"
+              style={{ width: 34, height: 32, objectFit: 'contain', display: 'block' }}
               onError={(e) => (e.target.style.display = 'none')}
             />
             <span
@@ -615,6 +636,11 @@ const HERO_VIDEO =
   'https://d2ol7oe51mr4n9.cloudfront.net/user_3Dcp6zrGATlFYi9kI5hXvlA6IWT/f1298398-bb04-45b1-b5e9-384d28fe6725.mp4'
 
 function Hero() {
+  return <FoundationHero C={C} FONT={FONT} onBook={goToContact} Fallback={HeroVideo} />
+}
+
+// Previous video hero, kept as the fallback when WebGL isn't available.
+function HeroVideo() {
   const isMobile = useIsMobile()
 
   // iOS/low-power mode can block autoplay and show a pause overlay.
@@ -995,9 +1021,9 @@ function Marquee() {
     <div
       style={{
         position: 'relative',
-        borderTop: `1px solid ${C.border}`,
-        borderBottom: `1px solid ${C.border}`,
-        background: 'rgba(255,255,255,0.015)',
+        background: '#0B0B0B',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
         zIndex: 1,
       }}
     >
@@ -1008,7 +1034,7 @@ function Marquee() {
           fontSize: 11,
           letterSpacing: '0.26em',
           textTransform: 'uppercase',
-          color: C.faint,
+          color: 'rgba(255,255,255,0.45)',
           fontWeight: 650,
         }}
       >
@@ -1033,7 +1059,7 @@ function Marquee() {
             inset: 0,
             pointerEvents: 'none',
             background:
-              'linear-gradient(90deg, #000 0%, transparent 12%, transparent 88%, #000 100%)',
+              'linear-gradient(90deg, #0B0B0B 0%, transparent 12%, transparent 88%, #0B0B0B 100%)',
           }}
         />
       </div>
@@ -1078,7 +1104,7 @@ function SectionHeader({ kicker, title, sub, center = true, num }) {
             fontWeight: 650,
           }}
         >
-          {num ? `${num} — ${kicker}` : kicker}
+          {num ? `${num} · ${kicker}` : kicker}
         </span>
         <span
           aria-hidden
@@ -1089,7 +1115,8 @@ function SectionHeader({ kicker, title, sub, center = true, num }) {
           }}
         />
       </div>
-      <h2
+      <ScrubText
+        text={title}
         style={{
           fontSize: 'clamp(34px, 4.6vw, 54px)',
           fontWeight: 730,
@@ -1097,10 +1124,9 @@ function SectionHeader({ kicker, title, sub, center = true, num }) {
           letterSpacing: '-0.035em',
           lineHeight: 1.08,
           marginBottom: sub ? 20 : 0,
+          textWrap: 'balance',
         }}
-      >
-        {title}
-      </h2>
+      />
       {sub && (
         <p style={{ fontSize: 17.5, color: C.muted, lineHeight: 1.65 }}>{sub}</p>
       )}
@@ -1109,134 +1135,97 @@ function SectionHeader({ kicker, title, sub, center = true, num }) {
 }
 
 /* ============================================================
-   SERVICES — numbered cards with white hover-invert
+   SERVICES: the four layers of the stone, as an editorial list
    ============================================================ */
 const SERVICES = [
   {
-    icon: 'crm',
+    layer: 'Website',
+    title: 'Websites',
+    desc: 'Professional websites built from scratch: landing pages, business websites, and premium custom builds. Fast delivery, mobile responsive, SEO ready.',
+  },
+  {
+    layer: 'CRM',
     title: 'CRM Systems',
     desc: 'GoHighLevel setup, pipeline systems, lead tracking, and automations that never let an opportunity slip.',
   },
   {
-    icon: 'ai',
-    title: 'AI Marketing',
-    desc: 'Content generation, scheduling, brand-voice AI, and 24/7 automation that markets while you sleep.',
-  },
-  {
-    icon: 'web',
-    title: 'Website Development',
-    desc: 'Professional websites built from scratch — landing pages, business websites, and premium custom builds. Fast delivery, mobile responsive, SEO ready.',
-  },
-  {
-    icon: 'growth',
+    layer: 'Automation',
     title: 'Growth Automation',
     desc: 'Funnels, email systems, appointment booking, and integrations wired into one growth engine.',
   },
+  {
+    layer: 'Marketing',
+    title: 'AI Marketing',
+    desc: 'Content generation, scheduling, brand voice AI, and 24/7 automation that markets while you sleep.',
+  },
 ]
 
-function ServiceCard({ s, index }) {
-  const [hover, setHover] = useState(false)
-  const fg = hover ? '#000000' : C.text
-  const fgMuted = hover ? 'rgba(0,0,0,0.6)' : C.muted
-
+// The stone in four slabs, with one slab lifted: the same object as the hero.
+function LayerGlyph({ index, active }) {
   return (
-    <motion.div
+    <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden style={{ flex: 'none' }}>
+      {[0, 1, 2, 3].map((i) => {
+        const lift = i === index ? (active ? -7 : -3) : 0
+        const y = 16 + i * 10 + lift
+        const rx = [17, 22, 22, 17][i]
+        return (
+          <ellipse
+            key={i}
+            cx="32"
+            cy={y}
+            rx={rx}
+            ry="5"
+            fill={i === index ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            strokeWidth="1.2"
+            opacity={i === index ? 1 : 0.35}
+            style={{ transition: 'cy .35s cubic-bezier(.2,.8,.2,1)' }}
+          />
+        )
+      })}
+    </svg>
+  )
+}
+
+function ServiceRow({ s, index }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      animate={{ y: hover ? -8 : 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      className="lithos-service-row"
       style={{
-        position: 'relative',
-        background: hover ? '#FFFFFF' : C.card,
-        border: `1px solid ${hover ? '#FFFFFF' : C.border}`,
-        borderRadius: 20,
-        padding: '38px 34px',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 250,
-        height: '100%',
-        overflow: 'hidden',
-        transition: 'background 0.35s ease, border-color 0.35s ease',
-        backdropFilter: 'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)',
-        boxShadow: hover ? '0 24px 60px rgba(255,255,255,0.12)' : 'none',
-        cursor: 'default',
+        display: 'grid',
+        gridTemplateColumns: '64px 1fr',
+        gap: 28,
+        alignItems: 'start',
+        padding: '30px 0',
+        borderTop: `1px solid ${C.border}`,
+        color: C.text,
       }}
     >
-      {/* Ghost index number */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: 14,
-          right: 22,
-          fontSize: 84,
-          fontWeight: 800,
-          letterSpacing: '-0.05em',
-          lineHeight: 1,
-          color: hover ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)',
-          transition: 'color 0.35s ease',
-          userSelect: 'none',
-        }}
-      >
-        0{index + 1}
+      <LayerGlyph index={index} active={hover} />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, fontWeight: 650, letterSpacing: '0.2em', color: C.faint }}>
+            LAYER 0{index + 1}
+          </span>
+          <h3
+            style={{
+              fontSize: 'clamp(26px, 3vw, 38px)',
+              fontWeight: 600,
+              letterSpacing: '-0.03em',
+              lineHeight: 1.1,
+              transform: hover ? 'translateX(8px)' : 'none',
+              transition: 'transform .35s cubic-bezier(.2,.8,.2,1)',
+            }}
+          >
+            {s.title}
+          </h3>
+        </div>
+        <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.65, marginTop: 10, maxWidth: 560 }}>{s.desc}</p>
       </div>
-
-      <div
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: 14,
-          background: hover ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.07)',
-          border: `1px solid ${hover ? 'rgba(0,0,0,0.14)' : C.border}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 24,
-          color: fg,
-          transition: 'all 0.35s ease',
-        }}
-      >
-        <Icon name={s.icon} />
-      </div>
-      <h3
-        style={{
-          fontSize: 21,
-          fontWeight: 680,
-          color: fg,
-          marginBottom: 11,
-          letterSpacing: '-0.02em',
-          transition: 'color 0.35s ease',
-        }}
-      >
-        {s.title}
-      </h3>
-      <p
-        style={{
-          fontSize: 15,
-          color: fgMuted,
-          lineHeight: 1.65,
-          flex: 1,
-          transition: 'color 0.35s ease',
-        }}
-      >
-        {s.desc}
-      </p>
-      <div
-        style={{
-          marginTop: 24,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          color: fg,
-          transform: hover ? 'translateX(6px)' : 'translateX(0)',
-          opacity: hover ? 1 : 0.5,
-          transition: 'all 0.3s ease',
-        }}
-      >
-        <Icon name="arrow" />
-      </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -1247,39 +1236,52 @@ function Services() {
       className="lithos-section"
       style={{ position: 'relative', padding: `${PAD}px 28px`, zIndex: 1 }}
     >
-      <div style={{ maxWidth: MAXW, margin: '0 auto' }}>
-        <Reveal>
-          <SectionHeader
-            num="01"
-            kicker="What We Build"
-            title="Infrastructure, not band-aids"
-            sub="Four pillars that turn a scattered operation into a system that scales without you."
-          />
-        </Reveal>
-        <div
-          className="lithos-services-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 22,
-            marginTop: 64,
-          }}
-        >
-          {SERVICES.map((s, i) => (
-            <motion.div
-              key={s.title}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.55 }}
-              viewport={{ once: true }}
-              style={{ height: '100%' }}
+      <div
+        className="lithos-services-split"
+        style={{ maxWidth: MAXW, margin: '0 auto', display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 72, alignItems: 'start' }}
+      >
+        <div className="lithos-services-intro" style={{ position: 'sticky', top: 120 }}>
+          <Reveal>
+            <SectionHeader
+              num="01"
+              kicker="What we build"
+              title="Every layer of the business, built to fit together"
+              sub="Each layer works on its own. Stacked together they become one system that brings in customers and keeps you organized."
+              center={false}
+            />
+            <a
+              href="#contact-form-anchor"
+              onClick={goToContact}
+              className="lithos-textlink"
+              style={{ display: 'inline-block', marginTop: 28, fontSize: 15.5, fontWeight: 650, color: C.text, padding: '6px 0' }}
             >
-              <ServiceCard s={s} index={i} />
+              Plan your system with us <span aria-hidden>→</span>
+            </a>
+          </Reveal>
+        </div>
+        <div style={{ borderBottom: `1px solid ${C.border}` }}>
+          {SERVICES.map((sv, i) => (
+            <motion.div
+              key={sv.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08, duration: 0.55 }}
+              viewport={{ once: true, margin: '-60px' }}
+            >
+              <ServiceRow s={sv} index={i} />
             </motion.div>
           ))}
         </div>
       </div>
     </section>
+  )
+}
+
+function LiveHeader(props) {
+  return (
+    <Reveal>
+      <SectionHeader {...props} />
+    </Reveal>
   )
 }
 
@@ -1309,11 +1311,11 @@ const PLANS = [
   {
     name: 'Landing Page',
     price: 'Afl. 1,500',
-    per: 'one-time',
+    per: 'one time',
     support: '+ Afl. 150/month support plan after launch',
     best: 'A professional website that converts visitors into customers',
     features: [
-      'Custom 4–5 page website',
+      'Custom 4 to 5 page website',
       'Mobile responsive + SEO ready',
       'WhatsApp, Maps & contact forms',
       'Domain, hosting & SSL (first year)',
@@ -1325,7 +1327,7 @@ const PLANS = [
   {
     name: 'Landing Page + CRM',
     price: 'Afl. 3,500',
-    per: 'one-time',
+    per: 'one time',
     support: '+ Afl. 150/month support plan after launch',
     best: 'Your website plus the system that runs your business',
     features: [
@@ -1342,11 +1344,11 @@ const PLANS = [
     name: 'AI Marketing',
     price: 'Afl. 450',
     per: '/month',
-    best: 'AI-powered content that markets your brand 24/7',
+    best: 'AI content that markets your brand 24/7',
     features: [
       'AI content generation',
       'Social media scheduling',
-      'Brand-voice AI',
+      'Brand voice AI',
       'Monthly content calendar',
       'Performance reports',
     ],
@@ -1357,7 +1359,7 @@ const PLANS = [
     name: 'Automation Systems',
     price: 'Afl. 700',
     per: '/month',
-    best: 'Everything automated — all included, end to end',
+    best: 'Everything automated, all included, end to end',
     features: [
       'Funnels & email systems',
       'Appointment booking automations',
@@ -1372,7 +1374,7 @@ const PLANS = [
     name: 'Full Package',
     price: 'Custom',
     per: 'tailored to you',
-    best: 'Website, CRM, AI marketing and automations — the whole system',
+    best: 'Website, CRM, AI marketing and automations: the whole system',
     features: [
       'Everything Lithos Labs builds',
       'Full automation stack',
@@ -1435,7 +1437,7 @@ function PricingCard({ p, onCta }) {
         style={{
           fontSize: 18.5,
           fontWeight: 650,
-          color: dark ? '#000' : C.text,
+          color: dark ? '#000000' : C.text,
           letterSpacing: '-0.02em',
           marginBottom: 12,
         }}
@@ -1454,7 +1456,7 @@ function PricingCard({ p, onCta }) {
           style={{
             fontSize: 28,
             fontWeight: 750,
-            color: dark ? '#000' : C.accent,
+            color: dark ? '#000000' : C.accent,
             letterSpacing: '-0.035em',
           }}
         >
@@ -1648,7 +1650,7 @@ function Pricing() {
             num="02"
             kicker="Pricing"
             title="Simple, transparent pricing"
-            sub="Pick a system — grab the cards to slide through them. All prices in Aruban florin."
+            sub="Pick a system. Grab the cards to slide through them. All prices in Aruban florin."
           />
         </Reveal>
       </div>
@@ -1690,7 +1692,7 @@ function Pricing() {
               inset: 0,
               pointerEvents: 'none',
               background:
-                'linear-gradient(90deg, #000 0%, transparent 6%, transparent 94%, #000 100%)',
+                'linear-gradient(90deg, #000000 0%, transparent 6%, transparent 94%, #000000 100%)',
             }}
           />
         </div>
@@ -1711,7 +1713,7 @@ const STEPS = [
   {
     n: '02',
     title: 'Structure',
-    desc: 'We build your CRM and automation infrastructure — the operational backbone your brand runs on.',
+    desc: 'We build your CRM and automation infrastructure, the operational backbone your brand runs on.',
   },
   {
     n: '03',
@@ -1723,6 +1725,8 @@ const STEPS = [
 function HowItWorks() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
+  // the line fills and each step lights up as you scroll through the section
+  const prog = useScrollProgress(ref, { start: 0.8, end: 0.35 })
 
   return (
     <section
@@ -1759,23 +1763,29 @@ function HowItWorks() {
           }}
         >
           {/* Connecting line */}
-          <motion.div
+          <div
             aria-hidden
             className="lithos-steps-line"
-            initial={{ scaleX: 0 }}
-            animate={inView ? { scaleX: 1 } : {}}
-            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
             style={{
               position: 'absolute',
               top: 30,
               left: '16%',
               right: '16%',
               height: 1,
-              transformOrigin: '0% 50%',
-              background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)`,
-              opacity: 0.45,
+              background: 'rgba(255,255,255,0.12)',
             }}
-          />
+          >
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                transformOrigin: '0% 50%',
+                transform: `scaleX(${prog})`,
+                background: C.accent,
+                boxShadow: 'none',
+              }}
+            />
+          </div>
           {STEPS.map((step, i) => (
             <motion.div
               key={step.n}
@@ -1814,12 +1824,14 @@ function HowItWorks() {
                   height: 60,
                   borderRadius: '50%',
                   margin: '0 auto 26px',
-                  background: C.bg,
+                  background: prog >= i / (STEPS.length - 1) - 0.02 ? C.accent : C.bg,
                   border: `1px solid ${C.accent}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: C.accent,
+                  color: prog >= i / (STEPS.length - 1) - 0.02 ? C.bg : C.accent,
+                  transition: 'background .35s ease, color .35s ease, transform .35s ease',
+                  transform: prog >= i / (STEPS.length - 1) - 0.02 ? 'scale(1.08)' : 'scale(1)',
                   fontSize: 16,
                   fontWeight: 700,
                   letterSpacing: '0.02em',
@@ -1862,8 +1874,8 @@ function HowItWorks() {
    WHY LITHOS — Systems Over Chaos
    ============================================================ */
 const BULLETS = [
-  'We build what most agencies won’t — full operational infrastructure.',
-  'AI-powered content that runs 24/7 without a team.',
+  'We build what most agencies won’t: full operational infrastructure.',
+  'AI content that runs 24/7 without a team.',
   'CRM systems that capture every lead automatically.',
   'Measurable results, not vanity metrics.',
 ]
@@ -1898,7 +1910,7 @@ function WhyLithos() {
                 fontWeight: 650,
               }}
             >
-              04 — Why Lithos
+              04 · Why Lithos
             </span>
           </div>
           <h2
@@ -1937,15 +1949,8 @@ function WhyLithos() {
                 borderLeft: `2px solid ${C.accent}`,
               }}
             >
-              Most businesses fail not because of bad products — but because of{' '}
-              <span
-                style={{
-                  color: 'transparent',
-                  WebkitTextStroke: '1px rgba(255,255,255,0.9)',
-                }}
-              >
-                bad systems.
-              </span>
+              Most businesses fail not because of bad products, but because of{' '}
+              <span className="lithos-serif">bad systems.</span>
             </blockquote>
           </Reveal>
 
@@ -2001,28 +2006,34 @@ function WhyLithos() {
    ============================================================ */
 const WORK_ITEMS = [
   {
-    industry: 'Barbershop — Aruba',
+    industry: 'Barbershop · Aruba',
     name: 'Island Fades Elite',
-    desc: 'Full booking website for Aruba’s Island Fades barbershop — services, barbers, and online appointments.',
+    desc: 'Full booking website for Aruba’s Island Fades barbershop: services, barbers, and online appointments.',
     href: 'https://islandfadeselite.com/',
+    logo: '/clients/island-fades.png',
+    logoH: 92,
   },
   {
-    industry: 'Leak Detection & Plumbing — Aruba',
+    industry: 'Leak Detection & Plumbing · Aruba',
     name: 'AWATEC',
     desc: 'Service booking platform for AWATEC’s leak detection and plumbing operation, wired into their CRM and automations.',
     href: 'https://www.awatecaruba.com/',
+    logo: '/clients/awatec.png',
+    logoH: 46,
   },
   {
     industry: 'Trading SaaS',
     name: 'LIMITLESS Journal',
-    desc: 'A full trading journal platform — analytics dashboards, trade logging, and a social layer for traders.',
+    desc: 'A full trading journal platform: analytics dashboards, trade logging, and a social layer for traders.',
     href: 'https://www.limitless-journal.com/',
+    logo: '/clients/limitless.png',
+    logoH: 78,
   },
 ]
 
-function WorkCard({ w, index }) {
+function WorkCard({ w }) {
   const [hover, setHover] = useState(false)
-  const fg = hover ? '#000' : C.text
+  const fg = hover ? '#000000' : C.text
   return (
     <motion.a
       href={w.href}
@@ -2050,21 +2061,31 @@ function WorkCard({ w, index }) {
       }}
     >
       <div
-        aria-hidden
         style={{
-          position: 'absolute',
-          top: 14,
-          right: 22,
-          fontSize: 84,
-          fontWeight: 800,
-          letterSpacing: '-0.05em',
-          lineHeight: 1,
-          color: hover ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)',
-          transition: 'color 0.35s ease',
-          userSelect: 'none',
+          height: 170,
+          margin: '-20px -16px 28px',
+          borderRadius: 14,
+          background: '#151515',
+          border: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
         }}
       >
-        0{index + 1}
+        <img
+          src={w.logo}
+          alt={`${w.name} logo`}
+          loading="lazy"
+          style={{
+            height: w.logoH,
+            width: 'auto',
+            maxWidth: '78%',
+            objectFit: 'contain',
+            transform: hover ? 'scale(1.06)' : 'scale(1)',
+            transition: 'transform .5s cubic-bezier(.2,.8,.2,1)',
+          }}
+        />
       </div>
       <div
         style={{
@@ -2134,7 +2155,7 @@ function OurWork() {
             num="05"
             kicker="Portfolio"
             title="Our work"
-            sub="Real systems, live in production — built by Lithos Labs."
+            sub="Real systems, live in production, built by Lithos Labs."
           />
         </Reveal>
         <div
@@ -2155,7 +2176,9 @@ function OurWork() {
               viewport={{ once: true }}
               style={{ height: '100%' }}
             >
-              <WorkCard w={w} index={i} />
+              <Tilt>
+                <WorkCard w={w} />
+              </Tilt>
             </motion.div>
           ))}
         </div>
@@ -2278,7 +2301,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      'Our booking system and automated follow-ups now run while we sleep. Best investment we made this year.',
+      'Our booking system and automated follow ups now run while we sleep. Best investment we made this year.',
     name: 'Restaurant Owner, Aruba',
     result: '40% more bookings',
   },
@@ -2550,7 +2573,7 @@ function ContactForm() {
             letterSpacing: '-0.02em',
           }}
         >
-          Message sent — we’ll be in touch within 24 hours
+          Message sent. We’ll be in touch within 24 hours
         </h3>
         <p style={{ fontSize: 15, color: C.muted }}>
           Thanks for reaching out. Keep an eye on your inbox.
@@ -2644,11 +2667,11 @@ function ContactForm() {
         onChange={update('service_needed')}
         required
       >
-        <option value="" disabled style={{ background: '#000' }}>
+        <option value="" disabled style={{ background: '#000000' }}>
           What do you need?
         </option>
         {SERVICE_OPTIONS.map((o) => (
-          <option key={o} value={o} style={{ background: '#000' }}>
+          <option key={o} value={o} style={{ background: '#000000' }}>
             {o}
           </option>
         ))}
@@ -2753,14 +2776,7 @@ function CTA() {
             }}
           >
             Ready to build on{' '}
-            <span
-              style={{
-                color: 'transparent',
-                WebkitTextStroke: '1.4px rgba(255,255,255,0.9)',
-              }}
-            >
-              solid systems?
-            </span>
+            <span className="lithos-serif">solid systems?</span>
           </h2>
           <p
             style={{
@@ -2852,10 +2868,12 @@ function Footer() {
               }}
             >
               <img
-                src="/lithos-logo.png"
+                src="/lithos-mark-white.png"
                 alt="Lithos Labs"
                 loading="lazy"
-                style={{ width: 26, height: 26, objectFit: 'contain' }}
+                width="30"
+                height="28"
+                style={{ width: 30, height: 28, objectFit: 'contain' }}
                 onError={(e) => (e.target.style.display = 'none')}
               />
               <span
@@ -3009,7 +3027,7 @@ function WhatsApp() {
         height: 58,
         borderRadius: '50%',
         background: '#25D366',
-        color: '#fff',
+        color: '#FFFFFF',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -3238,7 +3256,8 @@ function CookieNotice() {
             gap: 16,
             padding: '14px 18px',
             borderRadius: 14,
-            background: 'rgba(14,14,14,0.9)',
+            background: 'rgba(14,14,14,0.94)',
+            boxShadow: '0 12px 40px rgba(255,255,255,0.12)',
             backdropFilter: 'blur(14px)',
             WebkitBackdropFilter: 'blur(14px)',
             border: `1px solid ${C.border}`,
@@ -3294,7 +3313,7 @@ function CursorGlow() {
         height: 340,
         borderRadius: '50%',
         background:
-          'radial-gradient(circle, rgba(255,255,255,0.055) 0%, transparent 70%)',
+          'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)',
         pointerEvents: 'none',
         zIndex: 9998,
         transform: 'translate(-50%, -50%)',
@@ -3341,6 +3360,14 @@ export default function App() {
           opacity: 0 !important;
         }
         section[id] { scroll-margin-top: 86px; }
+        .lithos-pulse { animation: lithosPulse 2.2s ease-in-out infinite; }
+        .lithos-hold-dot { width: 14px; height: 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.6); position: relative; }
+        .lithos-hold-dot::after { content: ''; position: absolute; inset: -6px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); animation: lithosHold 1.8s ease-out infinite; }
+        @keyframes lithosHold { 0% { transform: scale(.6); opacity: 1 } 100% { transform: scale(1.5); opacity: 0 } }
+        @media (max-width: 860px) {
+          .lithos-flow-grid { grid-template-columns: 1fr !important; }
+        }
+        @keyframes lithosPulse { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
         .lithos-cta-watermark { font-size: clamp(90px, 16vw, 200px); }
         .lithos-footer-wordmark { font-size: clamp(64px, 11.5vw, 168px); }
         .lithos-marquee-track {
@@ -3379,6 +3406,9 @@ export default function App() {
           .lithos-desktop-nav { display: none !important; }
           .lithos-hamburger { display: flex !important; }
           .lithos-services-grid { grid-template-columns: 1fr !important; }
+          .lithos-services-split { grid-template-columns: 1fr !important; gap: 36px !important; }
+          .lithos-services-intro { position: static !important; }
+          .lithos-service-row { grid-template-columns: 48px 1fr !important; gap: 18px !important; }
           .lithos-testimonials-grid { grid-template-columns: 1fr !important; }
           .lithos-work-grid { grid-template-columns: 1fr !important; }
           .lithos-why-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
@@ -3436,7 +3466,6 @@ export default function App() {
           <HowItWorks />
           <WhyLithos />
           <OurWork />
-          <Stats />
           <Testimonials />
           <CTA />
         </main>
