@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { unlockSound, tap, knock } from './sound.js'
 
 /*
@@ -665,34 +665,37 @@ export default function FoundationHero({ C, FONT, onBook, Fallback }) {
             className="lithos-hero-title"
             aria-label="We build the foundation your business runs on."
             style={{
-              fontSize: mobile ? 'clamp(44px, 12.6vw, 62px)' : 'clamp(58px, 7.4vw, 120px)',
+              // desktop: sized by the smaller of width and height so every screen
+              // (laptop, monitor, ultrawide) gets the same two-line composition
+              fontSize: mobile ? 'clamp(44px, 12.6vw, 62px)' : 'clamp(44px, min(7.2vw, 12.5vh), 150px)',
               fontWeight: 650,
               color: C.text,
               letterSpacing: '-0.05em',
               lineHeight: 0.95,
               margin: 0,
-              maxWidth: mobile ? 420 : 1100,
+              maxWidth: mobile ? 420 : 'none',
               textShadow: '0 6px 50px rgba(0,0,0,0.55)',
               pointerEvents: 'auto',
             }}
           >
             {HERO_WORDS.map((w, i) => (
-              <span key={w + i} aria-hidden style={{ display: 'inline-block', whiteSpace: 'pre' }}>
+              <Fragment key={w + i}>
                 <span
                   ref={(el) => (wordRefs.current[i] = el)}
+                  aria-hidden
                   className={w === 'foundation' ? 'lithos-serif' : undefined}
                   style={{ display: 'inline-block', willChange: 'transform, opacity, filter' }}
                 >
                   {w}
                 </span>
-                {i < HERO_WORDS.length - 1 ? ' ' : ''}
-              </span>
+                {!mobile && w === 'foundation' ? <br /> : i < HERO_WORDS.length - 1 ? ' ' : ''}
+              </Fragment>
             ))}
           </h1>
           <div ref={restRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' }}>
             <p
               style={{
-                fontSize: mobile ? 16 : 19,
+                fontSize: mobile ? 16 : 'clamp(16px, min(1.3vw, 2.3vh), 24px)',
                 color: 'rgba(255,255,255,0.72)',
                 lineHeight: 1.6,
                 maxWidth: 520,
