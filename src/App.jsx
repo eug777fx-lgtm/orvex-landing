@@ -975,9 +975,9 @@ function HeroVideo() {
    BRAND MARQUEE — rolling banner of client logos
    ============================================================ */
 const BRANDS = [
-  { name: 'Island Fades', src: '/clients/island-fades.png', h: 72 },
-  { name: 'AWATEC', src: '/clients/awatec.png', h: 38 },
-  { name: 'LIMITLESS', src: '/clients/limitless.png', h: 65 },
+  { name: 'Island Fades', src: '/clients/island-fades.png', h: 64 },
+  { name: 'AWATEC', src: '/clients/awatec.png', h: 36 },
+  { name: 'LIMITLESS', src: '/clients/limitless.png', h: 54 },
 ]
 
 function Marquee() {
@@ -989,8 +989,10 @@ function Marquee() {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 64,
-        marginRight: 64,
+        justifyContent: 'center',
+        width: 260,
+        height: 80,
+        flex: 'none',
       }}
     >
       <img
@@ -1000,18 +1002,8 @@ function Marquee() {
         style={{
           height: b.h,
           width: 'auto',
-          opacity: 0.85,
+          maxWidth: 200,
           objectFit: 'contain',
-        }}
-      />
-      <span
-        aria-hidden
-        style={{
-          width: 5,
-          height: 5,
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.3)',
-          flexShrink: 0,
         }}
       />
     </span>
@@ -3003,7 +2995,37 @@ function Footer() {
    WHATSAPP FLOATING BUTTON
    ============================================================ */
 function WhatsApp() {
+  // shows up once the visitor has scrolled past the stone story completely
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    let raf = 0
+    const check = () => {
+      raf = 0
+      const hero = document.getElementById('hero')
+      setShow(hero ? hero.getBoundingClientRect().bottom <= 0 : true)
+    }
+    const on = () => {
+      if (!raf) raf = requestAnimationFrame(check)
+    }
+    check()
+    window.addEventListener('scroll', on, { passive: true })
+    window.addEventListener('resize', on)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', on)
+      window.removeEventListener('resize', on)
+    }
+  }, [])
   return (
+    <div
+      aria-hidden={!show}
+      style={{
+        opacity: show ? 1 : 0,
+        visibility: show ? 'visible' : 'hidden',
+        pointerEvents: show ? 'auto' : 'none',
+        transition: 'opacity .4s ease, visibility .4s',
+      }}
+    >
     <motion.a
       href="https://wa.me/2977491888"
       target="_blank"
@@ -3039,254 +3061,10 @@ function WhatsApp() {
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
       </svg>
     </motion.a>
+    </div>
   )
 }
 
-/* ============================================================
-   LOADING SCREEN — cinematic intro
-   Stone draws in → spins up to a blur → collapses into a point
-   → white shockwave → site snaps in
-   ============================================================ */
-function LoadingScreen({ onReveal }) {
-  const [show, setShow] = useState(true)
-
-  useEffect(() => {
-    const reveal = setTimeout(() => onReveal && onReveal(), 1850)
-    const kill = setTimeout(() => setShow(false), 2150)
-    return () => {
-      clearTimeout(reveal)
-      clearTimeout(kill)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            background: C.bg,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 26,
-            overflow: 'hidden',
-          }}
-        >
-          {/* Spinning stone — draw, spin up violently, collapse */}
-          <motion.div
-            animate={{
-              rotate: [0, 40, 360, 2520],
-              scale: [0.85, 1, 1.12, 0.01],
-              opacity: [1, 1, 1, 0],
-            }}
-            transition={{
-              duration: 1.85,
-              times: [0, 0.3, 0.62, 1],
-              ease: ['easeOut', 'easeInOut', 'easeIn'],
-            }}
-            style={{ display: 'flex' }}
-          >
-            <svg
-              width="86"
-              height="86"
-              viewBox="0 0 100 100"
-              fill="none"
-              stroke={C.accent}
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <motion.path
-                d="M28 22 C42 12, 66 14, 78 30 C88 44, 86 66, 70 78 C54 90, 30 86, 19 70 C9 55, 14 32, 28 22 Z"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.65, ease: 'easeInOut' }}
-              />
-            </svg>
-          </motion.div>
-
-          {/* Spin ghost ring — motion blur illusion while spinning fast */}
-          <motion.div
-            aria-hidden
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0, 0.5, 0], scale: [1, 1, 1.25, 0.01] }}
-            transition={{ duration: 1.85, times: [0, 0.55, 0.8, 1], ease: 'easeIn' }}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: 110,
-              height: 110,
-              marginTop: -68,
-              marginLeft: -55,
-              borderRadius: '50%',
-              border: '2.5px solid rgba(255,255,255,0.5)',
-              borderTopColor: 'transparent',
-              borderBottomColor: 'transparent',
-              filter: 'blur(2px)',
-            }}
-          />
-
-          {/* Shockwave ring — fires as the stone collapses */}
-          <motion.div
-            aria-hidden
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: [0, 0, 26], opacity: [0, 0.9, 0] }}
-            transition={{ duration: 2.05, times: [0, 0.87, 1], ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: 120,
-              height: 120,
-              marginTop: -73,
-              marginLeft: -60,
-              borderRadius: '50%',
-              border: '2px solid #FFFFFF',
-              boxShadow: '0 0 60px rgba(255,255,255,0.5), inset 0 0 40px rgba(255,255,255,0.25)',
-            }}
-          />
-
-          {/* Second, thinner shockwave slightly behind */}
-          <motion.div
-            aria-hidden
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: [0, 0, 18], opacity: [0, 0.5, 0] }}
-            transition={{ duration: 2.15, times: [0, 0.9, 1], ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: 120,
-              height: 120,
-              marginTop: -73,
-              marginLeft: -60,
-              borderRadius: '50%',
-              border: '1px solid rgba(255,255,255,0.8)',
-            }}
-          />
-
-          {/* White flash at the moment of collapse */}
-          <motion.div
-            aria-hidden
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0, 0.85, 0] }}
-            transition={{ duration: 2.05, times: [0, 0.86, 0.9, 1], ease: 'easeOut' }}
-            style={{ position: 'absolute', inset: 0, background: '#FFFFFF' }}
-          />
-
-          {/* Wordmark — letterspacing stretches, then gets sucked away */}
-          <motion.div
-            initial={{ opacity: 0, letterSpacing: '0.2em' }}
-            animate={{
-              opacity: [0, 1, 1, 0],
-              letterSpacing: ['0.2em', '0.4em', '0.55em', '1.2em'],
-              scale: [1, 1, 1, 0.6],
-            }}
-            transition={{ duration: 1.85, times: [0, 0.25, 0.62, 1], ease: 'easeIn' }}
-            style={{
-              fontSize: 13,
-              textTransform: 'uppercase',
-              color: C.muted,
-              fontWeight: 600,
-              paddingLeft: '0.4em',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Lithos Labs
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
-
-/* ============================================================
-   COOKIE NOTICE
-   ============================================================ */
-function CookieNotice() {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    let alreadyAccepted = false
-    try {
-      alreadyAccepted = localStorage.getItem('lithos_cookie_ok') === 'true'
-    } catch {
-      alreadyAccepted = false
-    }
-    if (alreadyAccepted) return
-    const t = setTimeout(() => setVisible(true), 1600)
-    return () => clearTimeout(t)
-  }, [])
-
-  function accept() {
-    try {
-      localStorage.setItem('lithos_cookie_ok', 'true')
-    } catch {
-      /* ignore */
-    }
-    setVisible(false)
-  }
-
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 30 }}
-          transition={{ duration: 0.4 }}
-          className="lithos-cookie"
-          style={{
-            position: 'fixed',
-            bottom: 18,
-            left: 18,
-            zIndex: 95,
-            maxWidth: 420,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            padding: '14px 18px',
-            borderRadius: 14,
-            background: 'rgba(14,14,14,0.94)',
-            boxShadow: '0 12px 40px rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-            border: `1px solid ${C.border}`,
-          }}
-        >
-          <span
-            style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.5, flex: 1 }}
-          >
-            We use cookies to improve your experience.
-          </span>
-          <PressButton
-            onClick={accept}
-            style={{
-              flexShrink: 0,
-              background: C.accent,
-              color: C.bg,
-              fontSize: 13,
-              fontWeight: 600,
-              padding: '9px 18px',
-              borderRadius: 999,
-            }}
-          >
-            Accept
-          </PressButton>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
 
 /* ============================================================
    CURSOR GLOW — follows the mouse
@@ -3327,7 +3105,6 @@ function CursorGlow() {
    APP
    ============================================================ */
 export default function App() {
-  const [revealed, setRevealed] = useState(false)
 
   return (
     <div style={{ background: C.bg, color: C.text, fontFamily: FONT, position: 'relative' }}>
@@ -3419,7 +3196,6 @@ export default function App() {
           .lithos-footer-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
           .lithos-form-row { grid-template-columns: 1fr !important; }
           .lithos-section { padding-top: 64px !important; padding-bottom: 64px !important; }
-          .lithos-cookie { left: 12px; right: 12px; max-width: none; }
         }
       `}</style>
 
@@ -3439,25 +3215,9 @@ export default function App() {
 
       <ParticleNetwork />
       <ScrollProgress />
-      <LoadingScreen onReveal={() => setRevealed(true)} />
       <CursorGlow />
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: revealed ? 1 : 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      >
-        <Nav />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, scale: 1.06, filter: 'blur(14px)' }}
-        animate={
-          revealed
-            ? { opacity: 1, scale: 1, filter: 'blur(0px)' }
-            : { opacity: 0, scale: 1.06, filter: 'blur(14px)' }
-        }
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        style={{ transformOrigin: '50% 20%' }}
-      >
+      <Nav />
+      <div>
         <main style={{ position: 'relative', zIndex: 1 }}>
           <Hero />
           <Marquee />
@@ -3470,9 +3230,8 @@ export default function App() {
           <CTA />
         </main>
         <Footer />
-      </motion.div>
+      </div>
       <WhatsApp />
-      <CookieNotice />
     </div>
   )
 }
