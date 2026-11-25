@@ -305,9 +305,9 @@ export function createStoneEngine(canvas, { mobile = false, reduced = false, onS
     envMapIntensity: 1.1,
   })
   const blueprintMat = new THREE.LineBasicMaterial({
-    color: 0x111111,
+    color: 0xffffff,
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.75,
   })
 
   const stone = new THREE.Group()
