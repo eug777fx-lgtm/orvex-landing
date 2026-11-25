@@ -7,6 +7,9 @@ import { unlockSound, tap, knock } from './sound.js'
  * IntersectionObserver) so nothing gets skipped on heavy GPU frames.
  */
 
+// hero, problem, layers, live, together
+const SNAP_POINTS = [0, 0.25, 0.5, 0.75, 1]
+
 const HERO_WORDS = ["We", "build", "the", "foundation", "your", "business", "runs", "on."]
 
 const LAYERS = [
@@ -310,6 +313,72 @@ export default function FoundationHero({ C, FONT, onBook, Fallback }) {
       window.removeEventListener('resize', resize)
       if (engine) engine.dispose()
       engineRef.current = null
+    }
+  }, [mobile, reduced])
+
+  // Phones: when a swipe settles inside the stone story, glide to the next
+  // stage in the direction of travel so each stage locks into place.
+  useEffect(() => {
+    if (!mobile || reduced) return
+    const section = sectionRef.current
+    let lastY = window.scrollY
+    let dir = 0
+    let touching = false
+    let timer = 0
+    let auto = false
+    const points = () => {
+      const top = section.getBoundingClientRect().top + window.scrollY
+      const range = section.offsetHeight - window.innerHeight
+      return SNAP_POINTS.map((sp) => Math.round(top + sp * range))
+    }
+    const settle = () => {
+      if (touching) return
+      const y = window.scrollY
+      const pts = points()
+      const first = pts[0]
+      const last = pts[pts.length - 1]
+      if (y <= first + 2 || y >= last - 2) return // outside the story: scroll freely
+      let target
+      if (dir > 0) target = pts.find((v) => v > y + 6)
+      else if (dir < 0) target = [...pts].reverse().find((v) => v < y - 6)
+      if (target == null) target = pts.reduce((a, v) => (Math.abs(v - y) < Math.abs(a - y) ? v : a), pts[0])
+      if (Math.abs(target - y) < 4) return
+      auto = true
+      window.scrollTo({ top: target, behavior: 'smooth' })
+    }
+    const onScroll = () => {
+      const y = window.scrollY
+      if (!auto && Math.abs(y - lastY) > 1) dir = Math.sign(y - lastY)
+      lastY = y
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        if (auto) {
+          auto = false
+          return
+        }
+        settle()
+      }, 140)
+    }
+    const onStart = () => {
+      touching = true
+      auto = false
+      clearTimeout(timer)
+    }
+    const onEnd = () => {
+      touching = false
+      clearTimeout(timer)
+      timer = setTimeout(settle, 160)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('touchstart', onStart, { passive: true })
+    window.addEventListener('touchend', onEnd, { passive: true })
+    window.addEventListener('touchcancel', onEnd, { passive: true })
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('touchstart', onStart)
+      window.removeEventListener('touchend', onEnd)
+      window.removeEventListener('touchcancel', onEnd)
     }
   }, [mobile, reduced])
 

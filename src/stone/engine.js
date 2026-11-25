@@ -406,7 +406,8 @@ export function createStoneEngine(canvas, { mobile = false, reduced = false, onS
     dt = Math.min(dt, 0.05)
     const target = sampleCues(cues, clamp01(progress))
     target.explode = Math.max(target.explode, hold)
-    const k = reduced ? 1 : 1 - Math.exp(-dt * 5.5)
+    // phones follow the finger tightly so the story locks with the scroll instead of floating
+    const k = reduced ? 1 : 1 - Math.exp(-dt * (mobile ? 13 : 5.5))
     for (const key of KEYS) cur[key] += (target[key] - cur[key]) * k
 
     // cursor
