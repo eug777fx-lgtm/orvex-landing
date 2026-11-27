@@ -2003,6 +2003,8 @@ const WORK_ITEMS = [
     desc: 'Full booking website for Aruba’s Island Fades barbershop: services, barbers, and online appointments.',
     href: 'https://islandfadeselite.com/',
     logo: '/clients/island-fades.png',
+    shot: '/work/island-fades.jpg',
+    domain: 'islandfadeselite.com',
     logoH: 92,
   },
   {
@@ -2011,6 +2013,8 @@ const WORK_ITEMS = [
     desc: 'Service booking platform for AWATEC’s leak detection and plumbing operation, wired into their CRM and automations.',
     href: 'https://www.awatecaruba.com/',
     logo: '/clients/awatec.png',
+    shot: '/work/awatec.jpg',
+    domain: 'awatecaruba.com',
     logoH: 46,
   },
   {
@@ -2019,6 +2023,8 @@ const WORK_ITEMS = [
     desc: 'A full trading journal platform: analytics dashboards, trade logging, and a social layer for traders.',
     href: 'https://www.limitless-journal.com/',
     logo: '/clients/limitless.png',
+    shot: '/work/limitless.jpg',
+    domain: 'limitless-journal.com',
     logoH: 78,
   },
 ]
@@ -2054,30 +2060,74 @@ function WorkCard({ w }) {
     >
       <div
         style={{
-          height: 170,
           margin: '-20px -16px 28px',
           borderRadius: 14,
-          background: '#151515',
-          border: '1px solid rgba(255,255,255,0.06)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          background: '#0d0d0d',
+          border: `1px solid ${hover ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)'}`,
           overflow: 'hidden',
+          transition: 'border-color 0.35s ease',
         }}
       >
-        <img
-          src={w.logo}
-          alt={`${w.name} logo`}
-          loading="lazy"
+        {/* browser chrome so the preview reads as a live website */}
+        <div
           style={{
-            height: w.logoH,
-            width: 'auto',
-            maxWidth: '78%',
-            objectFit: 'contain',
-            transform: hover ? 'scale(1.06)' : 'scale(1)',
-            transition: 'transform .5s cubic-bezier(.2,.8,.2,1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '9px 12px',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            background: '#151515',
           }}
-        />
+        >
+          {[0, 1, 2].map((d) => (
+            <span key={d} style={{ width: 7, height: 7, borderRadius: 99, background: 'rgba(255,255,255,0.16)' }} />
+          ))}
+          <span
+            style={{
+              marginLeft: 8,
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.45)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {w.domain}
+          </span>
+        </div>
+        <div style={{ position: 'relative', aspectRatio: '16 / 9', overflow: 'hidden' }}>
+          <img
+            src={w.shot}
+            alt={`${w.name} website homepage`}
+            loading="lazy"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'top center',
+              transform: hover ? 'scale(1.05)' : 'scale(1)',
+              transition: 'transform .7s cubic-bezier(.2,.8,.2,1)',
+            }}
+          />
+          <span
+            style={{
+              position: 'absolute',
+              left: 10,
+              bottom: 10,
+              height: 34,
+              padding: '0 10px',
+              display: 'flex',
+              alignItems: 'center',
+              borderRadius: 10,
+              background: 'rgba(0,0,0,0.6)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}
+          >
+            <img src={w.logo} alt={`${w.name} logo`} loading="lazy" style={{ height: 22, width: 'auto', maxWidth: 90, objectFit: 'contain' }} />
+          </span>
+        </div>
       </div>
       <div
         style={{
